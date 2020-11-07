@@ -1,0 +1,8 @@
+.venv
+.DS_Store
+input/precincts/*
+!input/precincts/.keep
+data/precincts/*
+!data/precincts/.keep
+output/*
+!output/.keep
