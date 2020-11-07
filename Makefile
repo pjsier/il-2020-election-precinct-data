@@ -19,17 +19,15 @@ data/precincts/boone.geojson:
 data/precincts/cass.geojson: scripts/pybeacondump.py
 	pipenv run python $< 'https://beacon.schneidercorp.com/api/beaconCore/GetVectorLayer?QPS=5Y-f7mRUbGJaENB0Jltwx3G4KcI4w12v92cQJrmqo-vp6Ck-OC5Nthe73OFOi96NPQttpAccNgvzMxe1HII-pRLF3Xu3wh_wKPM-SWHbmTYJ4wYRn_cWh05VEFH4mTHSyrVQBgtZRaw3R1fdP6lMB4DX1BynJt-W6wSFiC3dnlZctHo5zM5bf-d6QNFExxGiuty5LTLlnq8V3KKcAqKBTyF9Oc7Vc6tOBn1SD5sjmjZF1KhztoKqZXtlBjWpIn4tw388hH3vUBiG4phR20rgVQ2' 1751 $@
 
-data/precincts/cook.geojson:
-	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 $@
-
 data/precincts/champaign.geojson:
 	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 $@
 
-# data/precincts/christian.geojson:
-# 	pipenv run esri2geojson https://services.arcgis.com/Xn3XOQd1zDlYr9z7/ArcGIS/rest/services/ElectoralDistricts/FeatureServer/1 $@
+data/precincts/coles.geojson:
+	pipenv run python scripts/scrape_coles.py | \
+	mapshaper -i - -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-88.33333333333333 +k=0.999975 +x_0=300000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 -o $@
 
-# data/precincts/coles.geojson:
-# 	pipenv run esri2geojson https://www.co.coles.il.us/ccwgis/rest/services/CountyClerk/VoterPrecincts/MapServer/1 $@
+data/precincts/cook.geojson:
+	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 $@
 
 data/precincts/dupage.geojson:
 	pipenv run esri2geojson https://gis.dupageco.org/arcgis/rest/services/Elections/ElectionPrecincts/MapServer/0 $@
@@ -60,6 +58,12 @@ data/precincts/menard.geojson: scripts/pybeacondump.py
 
 data/precincts/montgomery.geojson: scripts/pybeacondump.py
 	pipenv run python $< 'https://beacon.schneidercorp.com/api/beaconCore/GetVectorLayer?QPS=O9Vc5lNEg8Oh_TR60f60t8abmnzMwqDNWnUIRYFRx4AQbXvqOjy2f1l8ZM5tdcZfb4L5H2tNCMty9jxDoJg8kbYZY7O-VYQUZWnhwwqKQjVuk8nD-kdxb_aOoc7X_bJaIuh7VTFL3rZsZhiU5O4gYbMyOlN1GF4Q_PqwhbzvGD3nUahXCxaiuIyc_fKMfXuvdElxVbZZ82qU5HlL6a09ozeNivxPQNNKLkGvmGGkXhYIPBMQo4AlMJfCv2nnL0MpLmYKlZPPIZUPyTdjCKv3tQ2' 7705 $@
+
+data/precincts/morgan.geojson:
+	wget -qO - 'https://morganmaps.maps.arcgis.com/sharing/rest/content/items/8d7a6a2f54fa4686b6cbcfc47c6fb4d1/data?f=json' | \
+	jq '.operationalLayers[0].featureCollection.layers[0].featureSet' | \
+	pipenv run arcgis2geojson | \
+	mapshaper -i - -proj init=webmercator crs=wgs84 -o $@
 
 data/precincts/peoria.geojson:
 	pipenv run esri2geojson https://gis.peoriacounty.org/arcgis/rest/services/DP/Elections/MapServer/8 $@
@@ -93,3 +97,6 @@ input/precincts/city-of-chicago.geojson:
 
 input/precincts/city-of-chicago-wards.geojson:
 	wget -O $@ 'https://data.cityofchicago.org/api/geospatial/sp34-6z76?method=export&format=GeoJSON'
+
+data/precincts/city-of-danville.geojson:
+	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/463571faad874d958bcf15661f49f25c/rest/services/Administrative/Voting_Precincts/MapServer/1 $@

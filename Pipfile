@@ -9,6 +9,8 @@ verify_ssl = true
 bs4 = "*"
 geomet = "*"
 esridump = "*"
+arcgis2geojson = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
