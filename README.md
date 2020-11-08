@@ -5,6 +5,14 @@
 - Convert CRS
 - Standardize properties
 
+## Properties
+
+- County
+- County FIPS
+- Election Authority
+- Precinct Name
+- Precinct Name/ID Caps
+
 ## Prerequisites
 
 Make, Python, `jq`, `mapshaper`

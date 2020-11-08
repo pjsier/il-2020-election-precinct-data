@@ -85,7 +85,7 @@ stark
 stephenson
 tazewell
 union
-vermillion
+vermilion
 wabash
 warren
 washington

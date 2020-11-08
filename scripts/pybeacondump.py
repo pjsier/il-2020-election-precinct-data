@@ -7,6 +7,7 @@ import sys
 import urllib.parse
 
 import bs4
+import requests
 from geomet import wkt
 
 """
@@ -29,6 +30,21 @@ BODY_TEMPLATE = {
 
 name_value_pattern = re.compile(r"^(\w+) = (.*)$", re.M)
 coordinate_pattern = re.compile(r"(?P<x>-?\d+(\.\d+)?)\s+(?P<y>-?\d+(\.\d+)?)")
+
+
+def get_query_url(start_url):
+    """Create a query URL including a dynamically assigned QPS value"""
+    res = requests.get(start_url)
+    soup = bs4.BeautifulSoup(res.text, "html.parser")
+    config_script = soup.find_all("script", attrs={"type": "text/javascript"})[-1]
+    script_content = config_script.contents[0]
+    script_data_str = re.search(r"(?<=\= )\{.*\}(?=;)", script_content).group()
+    script_data = json.loads(script_data_str)
+
+    return (
+        "https://beacon.schneidercorp.com/api/beaconCore/GetVectorLayer?QPS="
+        + script_data["QPS"]
+    )
 
 
 def get_connection(raw_url):
@@ -179,9 +195,10 @@ def make_feature(record):
 
 
 if __name__ == "__main__":
-    _, raw_url, layer_id, filename = sys.argv
+    _, start_url, layer_id, filename = sys.argv
+    query_url = get_query_url(start_url)
 
-    conn, layer_path = get_connection(raw_url)
+    conn, layer_path = get_connection(query_url)
     bbox = get_starting_bbox(conn, layer_path, layer_id)
     print(bbox, file=sys.stderr)
 
