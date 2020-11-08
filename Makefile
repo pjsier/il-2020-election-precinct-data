@@ -32,11 +32,26 @@ data/precincts/cook.geojson:
 data/precincts/dupage.geojson:
 	pipenv run esri2geojson https://gis.dupageco.org/arcgis/rest/services/Elections/ElectionPrecincts/MapServer/0 $@
 
+data/precincts/effingham.geojson:
+	pipenv run esri2geojson https://services.arcgis.com/vj0V9Lal6oiz0YXp/ArcGIS/rest/services/ElectoralDistricts/FeatureServer/1 $@
+
 data/precincts/grundy.geojson:
 	pipenv run esri2geojson https://maps.grundyco.org/arcgis/rest/services/CountyClerk/PollingPlaces_SPIE_Public/FeatureServer/1 $@
 
 data/precincts/iroquois.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/IroquoisIL/IroquoisIL_PAT_GIS/MapServer/8 $@
+
+data/precincts/kankakee.geojson:
+	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 $@
+
+data/precincts/kendall.geojson: input/precincts/Kendall_County_Voting_Precinct.shp
+	mapshaper -i $< -o $@
+
+input/precincts/Kendall_County_Voting_Precinct.shp: input/precincts/kendall.zip
+	unzip -u $< -d $(dir $@)
+
+input/precincts/kendall.zip:
+	wget -O $@ 'https://opendata.arcgis.com/datasets/bc2430d057cb487aa51273e4e8762c2e_0.zip?outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D'
 
 data/precincts/lake.geojson:
 	pipenv run esri2geojson https://maps.lakecountyil.gov/arcgis/rest/services/GISMapping/WABPoliticalBoundaries/MapServer/5 $@
@@ -44,17 +59,33 @@ data/precincts/lake.geojson:
 data/precincts/lee.geojson:
 	pipenv run esri2geojson https://gis.leecountyil.com/server/rest/services/Election/Election_Precincts/MapServer/0 $@
 
+data/precincts/logan.geojson:
+	pipenv run esri2geojson https://www.centralilmaps.com/arcgis/rest/services/Logan/Logan_Flex_1/MapServer/40 $@
+
 data/precincts/macon.geojson:
 	pipenv run esri2geojson https://services1.arcgis.com/a3k0qIja5SolIRYR/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 $@
 
 data/precincts/macoupin.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/MacoupinIL/MacoupinIL_PAT_GIS/MapServer/4 $@
 
+data/precincts/madison.geojson:
+	pipenv run esri2geojson --proxy https://gis.co.madison.il.us/proxy/proxy.ashx? --header Referer:'https://gis.co.madison.il.us/madco/viewer/index.html?config=Voter' https://gisportal.co.madison.il.us/servera/rest/services/CountyClerk/PrecinctsWS/MapServer/0 $@
+
+data/precincts/mcdonough.geojson:
+	pipenv run python scripts/scrape_mcdonough.py | \
+	mapshaper -i - -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 -o $@
+
 data/precincts/mchenry.geojson:
 	pipenv run esri2geojson https://www.mchenrycountygis.org/arcgis/rest/services/County_Board/Precincts/MapServer/0 $@
 
+data/precincts/mclean.geojson:
+	pipenv run esri2geojson https://gis.mcleancountyil.gov/arcgis/rest/services/Clerks/PollingPlaces/MapServer/1 $@
+
 data/precincts/menard.geojson: scripts/pybeacondump.py
 	pipenv run python $< 'https://beacon.schneidercorp.com/api/beaconCore/GetVectorLayer?QPS=fAEOE9XHqspGGt-XzOAubrTzxnSLO1n6du498UaeWnCNnZ0NLSHJpGpfEiorTiHOgUc5iKXs22dpQuXHA4vyQlrVXW2YpVF_CSFOZiZjYTebiEYJmqusfbarDBl8gFV3Qd1Ef04En5OKzqwupstD3coQucMdfmenYU-NAPyFq90my7E29eSsIOI8zcXbcpJWaXcEplzc04YpQyddz2AVMmCj2FZLzgZuRv4dD36ZlLi0SeJ5Vblm9_0zQhjhuYqLfZAgfSyxoiJcCkkTdmH2Eg2' 25751 $@
+
+data/precincts/monroe.geojson:
+	pipenv run esri2geojson https://services.arcgis.com/AZVIEb4WFZST2UYx/arcgis/rest/services/Voter_Precincts/FeatureServer/0 $@
 
 data/precincts/montgomery.geojson: scripts/pybeacondump.py
 	pipenv run python $< 'https://beacon.schneidercorp.com/api/beaconCore/GetVectorLayer?QPS=O9Vc5lNEg8Oh_TR60f60t8abmnzMwqDNWnUIRYFRx4AQbXvqOjy2f1l8ZM5tdcZfb4L5H2tNCMty9jxDoJg8kbYZY7O-VYQUZWnhwwqKQjVuk8nD-kdxb_aOoc7X_bJaIuh7VTFL3rZsZhiU5O4gYbMyOlN1GF4Q_PqwhbzvGD3nUahXCxaiuIyc_fKMfXuvdElxVbZZ82qU5HlL6a09ozeNivxPQNNKLkGvmGGkXhYIPBMQo4AlMJfCv2nnL0MpLmYKlZPPIZUPyTdjCKv3tQ2' 7705 $@
@@ -65,11 +96,23 @@ data/precincts/morgan.geojson:
 	pipenv run arcgis2geojson | \
 	mapshaper -i - -proj init=webmercator crs=wgs84 -o $@
 
+data/precincts/ogle.geojson: scripts/pybeacondump.py
+	pipenv run python $< 'https://beacon.schneidercorp.com/api/beaconCore/GetVectorLayer?QPS=G6FoQaUZU4n-zot_iTSvAB4wv_cdXc45PwpSRkmeWSW358IAs6lDrCEC4ljJBm01d2tbzLyHKAtSlKyo_GszDLZt1laiburRnI1xJom-uYe5SXhkt6Ykf0_zGuI_NJiLUCbTc-D4fNuYPm90euvbJh-mxhaV_FWsGc6-0xoxEuUq5RJ9LKeF_zw5Sg2BdiWSj2qTUOnzjjqyza5hzyPRfjlWY0nF7E-8YOVGlA38ZAhmYUDyZPMlabB54odVRFGEYesyGeYae_21virTa9FE4A2' 5178 $@
+
 data/precincts/peoria.geojson:
 	pipenv run esri2geojson https://gis.peoriacounty.org/arcgis/rest/services/DP/Elections/MapServer/8 $@
 
 data/precincts/piatt.geojson:
 	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server2/rest/services/Piatt_CountyClerk/Precincts/MapServer/0 $@
+
+data/precincts/sangamon.geojson:
+	pipenv run esri2geojson https://services.arcgis.com/XqG0RpqsNfIBGGb2/ArcGIS/rest/services/ElectionPollingAndPrecincts/FeatureServer/1 $@
+
+data/precincts/st-clair.geojson:
+	pipenv run esri2geojson https://publicmap01.co.st-clair.il.us/arcgis/rest/services/SCC_voting_district/MapServer/7 $@
+
+data/precincts/tazewell.geojson:
+	pipenv run esri2geojson https://gis.tazewell.com/maps/rest/services/ElectionPoll/ElectionPollingPlaces/MapServer/1 $@
 
 data/precincts/vermillion.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/VermilionIL/VermilionIL_PAT_GIS/MapServer/12 $@
@@ -79,6 +122,9 @@ data/precincts/whiteside.geojson:
 
 data/precincts/will.geojson:
 	pipenv run esri2geojson https://gis.willcountyillinois.com/arcgis/rest/services/PoliticalLayers/Precincts/MapServer/0 $@
+
+data/precincts/woodford.geojson:
+	pipenv run esri2geojson https://services.arcgis.com/pPTAs43AFhhk0pXQ/ArcGIS/rest/services/WoodfordCounty_Election_Polling_Places/FeatureServer/1 $@
 
 data/precincts/city-of-bloomington.geojson: input/precincts/Voting_Precincts.shp
 	mapshaper -i $< -o $@
