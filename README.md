@@ -1,4 +1,4 @@
-# Illinois Fair Tax: Precinct-Level Results
+# Illinois Elections Precinct Data
 
 ## TODO
 
