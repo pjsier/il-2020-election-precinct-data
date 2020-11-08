@@ -25,10 +25,10 @@ data/precincts/boone.geojson:
 data/precincts/brown.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "009"' -o $@
 
-data/precincts/bureau.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/bureau.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "011"' -o $@
 
-data/precincts/calhoun.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/calhoun.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "013"' -o $@
 
 data/precincts/cass.geojson: scripts/pybeacondump.py
@@ -37,7 +37,7 @@ data/precincts/cass.geojson: scripts/pybeacondump.py
 data/precincts/champaign.geojson:
 	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 $@
 
-data/precincts/christian.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/christian.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "021"' -o $@
 
 data/precincts/clark.geojson: input/precincts/il_2016.geojson
@@ -56,7 +56,7 @@ data/precincts/coles.geojson:
 data/precincts/cook.geojson:
 	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 $@
 
-data/precincts/crawford.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/crawford.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "033"' -o $@
 
 data/precincts/cumberland.geojson: input/precincts/il_2016.geojson
@@ -83,10 +83,10 @@ data/precincts/effingham.geojson:
 data/precincts/fayette.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "051"' -o $@
 
-data/precincts/ford.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/ford.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "053"' -o $@
 
-data/precincts/franklin.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/franklin.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "055"' -o $@
 
 data/precincts/fulton.geojson: input/precincts/il_2016.geojson
@@ -101,31 +101,31 @@ data/precincts/greene.geojson: input/precincts/il_2016.geojson
 data/precincts/grundy.geojson:
 	pipenv run esri2geojson https://maps.grundyco.org/arcgis/rest/services/CountyClerk/PollingPlaces_SPIE_Public/FeatureServer/1 $@
 
-data/precincts/hamilton.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/hamilton.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "065"' -o $@
 
 data/precincts/hancock.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "067"' -o $@
 
-data/precincts/hardin.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/hardin.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "069"' -o $@
 
-data/precincts/henderson.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/henderson.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "071"' -o $@
 
-data/precincts/henry.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/henry.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "073"' -o $@
 
 data/precincts/iroquois.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/IroquoisIL/IroquoisIL_PAT_GIS/MapServer/8 $@
 
-data/precincts/jasper.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/jasper.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "079"' -o $@
 
 data/precincts/jefferson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "081"' -o $@
 
-data/precincts/jersey.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/jersey.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "083"' -o $@
 
 data/precincts/jo-daviess.geojson: input/precincts/il_2016.geojson
@@ -133,7 +133,7 @@ data/precincts/jo-daviess.geojson: input/precincts/il_2016.geojson
 
 # Based on https://www.elections.il.gov/precinctmaps/Johnson/PRECINCT%20MAP%20OF%20JOHNSON%20COUNTY.jpeg
 # TODO: Retain other fields
-data/precincts/johnson.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/johnson.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "087"' \
 	-each 'NAME10 = NAME10.includes("GRANTSBURG") ? "GRANTSBURG" : NAME10' \
 	-dissolve2 NAME10 \
@@ -190,7 +190,7 @@ data/precincts/marshall.geojson: input/precincts/il_2016.geojson
 data/precincts/mason.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "125"' -o $@
 
-data/precincts/massac.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/massac.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "127"' -o $@
 
 data/precincts/mcdonough.geojson:
@@ -221,7 +221,7 @@ data/precincts/morgan.geojson:
 	pipenv run arcgis2geojson | \
 	mapshaper -i - -proj init=webmercator crs=wgs84 -o $@
 
-data/precincts/moultrie.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/moultrie.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "139"' -o $@
 
 data/precincts/ogle.geojson: scripts/pybeacondump.py
@@ -239,13 +239,13 @@ data/precincts/piatt.geojson:
 data/precincts/pike.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "149"' -o $@
 
-data/precincts/pope.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/pope.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "151"' -o $@
 
-data/precincts/pulaski.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/pulaski.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "153"' -o $@
 
-data/precincts/putnam.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/putnam.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "155"' -o $@
 
 data/precincts/randolph.geojson: input/precincts/il_2016.geojson
@@ -266,10 +266,10 @@ data/precincts/sangamon.geojson:
 data/precincts/schuyler.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "169"' -o $@
 
-data/precincts/scott.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/scott.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "171"' -o $@
 
-data/precincts/shelby.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/shelby.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "173"' -o $@
 
 data/precincts/st-clair.geojson: input/precincts/st-clair.geojson
@@ -281,7 +281,7 @@ input/precincts/st-clair.geojson:
 # Based on https://www.elections.il.gov/precinctmaps/Stark/precinct%20map,pdf.pdf
 # TODO: Could pull https://www.google.com/maps/d/u/0/viewer?mid=1T0Iz1DogKirf-ZbEfFlFoIRSAxY&ll=41.082494046632426%2C-89.835084&z=10
 # TODO: Retain other fields
-data/precincts/stark.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/stark.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "175"' \
 	-each 'NAME10 = NAME10.includes("GOSHEN") ? "GOSHEN" : NAME10' \
 	-dissolve2 NAME10 \
@@ -299,19 +299,19 @@ data/precincts/union.geojson: input/precincts/il_2016.geojson
 data/precincts/vermillion.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/VermilionIL/VermilionIL_PAT_GIS/MapServer/12 $@
 
-data/precincts/wabash.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/wabash.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "185"' -o $@
 
 data/precincts/warren.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "187"' -o $@
 
-data/precincts/washington.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/washington.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "189"' -o $@
 
-data/precincts/wayne.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/wayne.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "191"' -o $@
 
-data/precincts/white.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/white.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "193"' -o $@
 
 data/precincts/whiteside.geojson:
@@ -320,7 +320,7 @@ data/precincts/whiteside.geojson:
 data/precincts/will.geojson:
 	pipenv run esri2geojson https://gis.willcountyillinois.com/arcgis/rest/services/PoliticalLayers/Precincts/MapServer/0 $@
 
-data/precincts/williamson.geojson: input/precincts/tl_2012_17_vtd10.shp
+data/precincts/williamson.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "199"' -o $@
 
 data/precincts/winnebago.geojson:
@@ -352,6 +352,9 @@ data/precincts/city-of-danville.geojson:
 
 data/precincts/city-of-east-st-louis.geojson: input/precincts/st-clair.geojson
 	mapshaper -i $< -filter 'prec_name1.includes("East St")' -o $@
+
+input/precincts/tl_2012_17_vtd10.geojson: input/precincts/tl_2012_17_vtd10.shp
+	mapshaper -i $< -proj wgs84 -filter-fields COUNTYFP10,NAME10,VTDI10,VTDST10 -o $@
 
 input/precincts/tl_2012_17_vtd10.shp: input/precincts/tl_2012_17_vtd10.zip
 	unzip -u $< -d $(dir $@)
