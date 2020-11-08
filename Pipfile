@@ -11,6 +11,7 @@ geomet = "*"
 esridump = "*"
 arcgis2geojson = "*"
 requests = "*"
+polyline = "*"
 
 [requires]
 python_version = "3.8"

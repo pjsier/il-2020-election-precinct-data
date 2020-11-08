@@ -323,6 +323,9 @@ data/precincts/will.geojson:
 data/precincts/williamson.geojson: input/precincts/tl_2012_17_vtd10.shp
 	mapshaper -i $< -filter 'COUNTYFP10 === "199"' -o $@
 
+data/precincts/winnebago.geojson:
+	pipenv run python scripts/scrape_winnebago.py > $@
+
 data/precincts/woodford.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/pPTAs43AFhhk0pXQ/ArcGIS/rest/services/WoodfordCounty_Election_Polling_Places/FeatureServer/1 $@
 
