@@ -1,17 +1,33 @@
-# Illinois Elections Precinct Data
+# Illinois 2020 Elections Precinct Data
 
 ## TODO
 
 - Convert CRS
 - Standardize properties
+- Results standardization
+- Pull raw text results
+  - https://github.com/PalmBeachPost/election-results-parser
+  - https://github.com/newsdev/elex
+- Scrapers for
+  - platinumelectionresults.com
+  - Clarity
+  - http://dekalb.il.electionconsole.com/precinct.php?e=2020%20General
+- See if can pull precinct results from pollresults.net
 
-## Properties
+## Geography Properties
 
 - County
 - County FIPS
 - Election Authority
 - Precinct Name
 - Precinct Name/ID Caps
+
+## Results Properties
+
+- Votes
+- Registered Voters
+- Total Ballots
+- Individual races
 
 ## Prerequisites
 
