@@ -6,3 +6,5 @@ data/precincts/*
 !data/precincts/.keep
 output/*
 !output/.keep
+input/foia/*
+!input/foia/.keep

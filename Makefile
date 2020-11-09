@@ -68,6 +68,13 @@ data/precincts/crawford.geojson: input/precincts/tl_2012_17_vtd10.geojson
 data/precincts/cumberland.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "035"' -o $@
 
+data/precincts/dekalb.geojson: input/precincts/Precinct_Area.shp
+	mapshaper -i $< -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-88.33333333333333 +k=0.999975 +x_0=300000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 -o $@
+
+# TODO: Figure out where to put source, only derived?
+input/precincts/Precinct_Area.shp: input/foia/Precinct_Area.zip
+	unzip -u $< -d $(dir $@)
+
 data/precincts/dewitt.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "039"' -o $@
 
