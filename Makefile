@@ -145,6 +145,9 @@ data/precincts/johnson.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	-dissolve2 NAME10 \
 	-o $@
 
+data/precincts/kane.geojson:
+	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/1db346a5fb5c4a5abfe52acfc97ad2a2/rest/services/Kane_Precincts/FeatureServer/0 --header Referer:'https://kanegis.maps.arcgis.com/apps/webappviewer/index.html' $@
+
 data/precincts/kankakee.geojson:
 	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 $@
 
