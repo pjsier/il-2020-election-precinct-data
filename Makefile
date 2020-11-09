@@ -368,9 +368,11 @@ data/precincts/woodford.geojson:
 data/precincts/city-of-bloomington.geojson: input/precincts/mclean.geojson
 	mapshaper -i $< -filter 'NAME.includes("City of Bloomington")' -o $@
 
-# TODO: Clip on DuPage as well
-data/precincts/city-of-chicago.geojson: input/precincts/city-of-chicago.geojson input/precincts/city-of-chicago-wards.geojson
-	mapshaper -i $< -clip $(filter-out $<,$^) -o $@
+data/precincts/city-of-chicago.geojson: input/precincts/city-of-chicago.geojson input/precincts/city-of-chicago-wards.geojson data/precincts/dupage.geojson
+	mapshaper -i $< \
+	-clip $(word 2,$^) \
+	-erase $(word 3,$^) \
+	-o $@
 
 input/precincts/city-of-chicago.geojson:
 	wget -O $@ https://raw.githubusercontent.com/datamade/chicago-municipal-elections/master/precincts/2019_precincts.geojson
