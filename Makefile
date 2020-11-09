@@ -360,7 +360,7 @@ data/precincts/williamson.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "199"' -o $@
 
 data/precincts/winnebago.geojson:
-	pipenv run python scripts/scrape_winnebago.py > $@
+	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Winnebago/107127/268257/json/cf87babd-eb26-4e37-bf3f-b3e4e62e2c52.json Winnebago > $@
 
 data/precincts/woodford.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/pPTAs43AFhhk0pXQ/ArcGIS/rest/services/WoodfordCounty_Election_Polling_Places/FeatureServer/1 $@
@@ -383,6 +383,9 @@ data/precincts/city-of-danville.geojson:
 
 data/precincts/city-of-east-st-louis.geojson: input/precincts/st-clair.geojson
 	mapshaper -i $< -filter 'prec_name1.includes("East St")' -o $@
+
+data/precincts/city-of-rockford.geojson:
+	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "City of Rockford" > $@
 
 input/precincts/tl_2012_17_vtd10.geojson: input/precincts/tl_2012_17_vtd10.shp
 	mapshaper -i $< -proj wgs84 -filter-fields COUNTYFP10,NAME10,VTDI10,VTDST10 -o $@

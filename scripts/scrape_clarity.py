@@ -5,9 +5,8 @@ import polyline
 import requests
 
 if __name__ == "__main__":
-    res = requests.get(
-        "https://results.enr.clarityelections.com/WRC/Winnebago/107127/268257/json/cf87babd-eb26-4e37-bf3f-b3e4e62e2c52.json"  # noqa
-    )
+    _, url, authority = sys.argv
+    res = requests.get(url)
     precincts = res.json()
     features = []
     for p in precincts:
@@ -15,7 +14,7 @@ if __name__ == "__main__":
         features.append(
             {
                 "type": "Feature",
-                "properties": {"Name": p["Name"], "County": "Winnebago"},
+                "properties": {"Name": p["Name"], "Authority": authority},
                 "geometry": {"type": "Polygon", "coordinates": [geom]},
             }
         )

@@ -10,7 +10,6 @@
   - https://github.com/newsdev/elex
 - Scrapers for
   - platinumelectionresults.com
-  - Clarity
   - http://dekalb.il.electionconsole.com/precinct.php?e=2020%20General
 - See if can pull precinct results from pollresults.net
 
