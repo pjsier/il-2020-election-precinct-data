@@ -12,6 +12,7 @@ esridump = "*"
 arcgis2geojson = "*"
 requests = "*"
 polyline = "*"
+lxml = "*"
 
 [requires]
 python_version = "3.8"

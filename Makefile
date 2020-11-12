@@ -421,3 +421,15 @@ input/precincts/il_2016.shp: input/precincts/il_2016.zip
 # https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/NH5S2I/A652IT&version=46.0
 input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
+
+data/results-unofficial/%.csv: input/results-unofficial/%.zip
+	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py > $@
+
+input/results-unofficial/dupage.zip:
+	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
+
+input/results-unofficial/lake.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Lake/105841/270844/reports/detailxml.zip
+
+input/results-unofficial/will.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Will/106272/267921/reports/detailxml.zip
