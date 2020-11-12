@@ -132,6 +132,9 @@ data/precincts/henry.geojson: input/precincts/tl_2012_17_vtd10.geojson
 data/precincts/iroquois.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/IroquoisIL/IroquoisIL_PAT_GIS/MapServer/8 $@
 
+data/precincts/jackson.geojson: input/precincts/il_2016.geojson
+	mapshaper -i $< -filter 'COUNTYFP === "077"' -o $@
+
 data/precincts/jasper.geojson: input/precincts/tl_2012_17_vtd10.geojson
 	mapshaper -i $< -filter 'COUNTYFP10 === "079"' -o $@
 
