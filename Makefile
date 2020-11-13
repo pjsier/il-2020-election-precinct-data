@@ -405,6 +405,12 @@ input/precincts/il_2016.shp: input/precincts/il_2016.zip
 input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
 
+data/results-unofficial/cook.csv:
+	pipenv run python scripts/scrape_cook_results.py > $@
+
+data/results-unofficial/city-of-chicago.csv:
+	pipenv run python scripts/scrape_chicago_results.py > $@
+
 data/results-unofficial/%.csv: input/results-unofficial/%.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@
 
