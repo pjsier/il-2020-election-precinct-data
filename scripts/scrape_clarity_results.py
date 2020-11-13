@@ -1,33 +1,75 @@
 import csv
 import sys
-from collections import defaultdict
 
 from bs4 import BeautifulSoup
 
 
-def get_key(contest, choice):
+def get_id(values):
+    return "-".join([v.lower().replace(" ", "-") for v in values])
+
+
+def get_contest(contest):
     if "constitution" in contest.lower():
-        return (
-            "il-constitution-yes" if "yes" in choice.lower() else "il-constitution-no"
-        )  # noqa
+        return "il-constitution"
     if "united states" in contest.lower() and "president" in contest.lower():
-        pass
-    return
+        return "us-president"
+
+
+def get_key(contest, choice):
+    if contest == "il-constitution":
+        vote = "yes" if "yes" in choice.attrs["text"].lower() else "no"
+        return f"{contest}-{vote}"
+    if contest == "us-president":
+        if choice.attrs["party"] == "D":
+            return f"{contest}-dem"
+        if choice.attrs["party"] == "R":
+            return f"{contest}-rep"
 
 
 # Assume detail results, combine totals from different kinds of votes, might work on
 # version not split out by vote types
 if __name__ == "__main__":
-    soup = BeautifulSoup(sys.stdin, "lxml")
+    soup = BeautifulSoup(sys.stdin, "xml")
 
-    # result_dict = defaultdict(lambda: dict(
-    #     "authority": "", "place": "", "ward": "", "precinct": "", "registered": 0, "ballots": 0, "turnout": 0, "us-president-dem": 0, "us-president-rep"))
     result_dict = {}
-    rows = []
+
+    for precinct in soup.find("VoterTurnout").find_all("Precinct"):
+        if "presidential" in precinct.attrs["name"].lower():
+            continue
+        *place_list, precinct_str = precinct.attrs["name"].split()
+        place = " ".join([p for p in place_list if p.lower() != "pct"])
+        result_dict[precinct.attrs["name"]] = {
+            "id": get_id([sys.argv[1], place, "", precinct_str]),
+            "authority": sys.argv[1],
+            "place": place,
+            "ward": "",
+            "precinct": precinct_str,
+            "registered": int(precinct.attrs["totalVoters"]),
+            "ballots": int(precinct.attrs["ballotsCast"]),
+            "us-president-dem": 0,
+            "us-president-rep": 0,
+            "us-president-votes": 0,
+            "il-constitution-yes": 0,
+            "il-constitution-no": 0,
+            "il-constitution-votes": 0,
+        }
 
     for contest in soup.find_all("Contest"):
+        contest_val = get_contest(contest.attrs["text"])
+        if not contest_val:
+            continue
         for choice in contest.find_all("Choice"):
-            print(choice.attrs)
+            choice_key = get_key(contest_val, choice)
+            for precinct in choice.find_all("Precinct"):
+                if "presidential" in precinct.attrs["name"].lower():
+                    continue
+                result_dict[precinct.attrs["name"]][f"{contest_val}-votes"] += int(
+                    precinct.attrs["votes"]
+                )
+                if choice_key:
+                    result_dict[precinct.attrs["name"]][choice_key] += int(
+                        precinct.attrs["votes"]
+                    )
 
     writer = csv.DictWriter(
         sys.stdout,
@@ -39,7 +81,6 @@ if __name__ == "__main__":
             "precinct",
             "registered",
             "ballots",
-            # "turnout", TODO: Calculate turnout from ballots / registered
             "us-president-dem",
             "us-president-rep",
             "us-president-votes",
@@ -49,4 +90,4 @@ if __name__ == "__main__":
         ],
     )
     writer.writeheader()
-    writer.writerows(rows)
+    writer.writerows(list(result_dict.values()))

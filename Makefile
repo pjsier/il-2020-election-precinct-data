@@ -406,7 +406,7 @@ input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
 
 data/results-unofficial/%.csv: input/results-unofficial/%.zip
-	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py > $@
+	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@
 
 input/results-unofficial/dupage.zip:
 	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
