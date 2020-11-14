@@ -11,7 +11,10 @@ install:
 	pipenv sync --dev
 
 output/%.geojson: data/precincts/%.geojson data/results-unofficial/%.csv
-	mapshaper -i $< keys=precinct,precinct field-types=precinct:str -o $@
+	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -o $@
+
+output/lake.geojson: data/precincts/lake.geojson data/results-unofficial/lake.csv
+	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct_num,precinct field-types=precinct_num:str,precinct:str -o $@
 
 data/precincts/adams.geojson:
 	pipenv run esri2geojson http://www.adamscountyarcserver.com/adamscountyarcserver/rest/services/AdamsCoBaseMapFG_2018/MapServer/43 - | \
@@ -67,7 +70,11 @@ data/precincts/coles.geojson:
 	mapshaper -i - -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-88.33333333333333 +k=0.999975 +x_0=300000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 -o $@
 
 data/precincts/cook.geojson:
-	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 $@
+	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 - | \
+	mapshaper -i - \
+	-filter-fields NAME,Num \
+	-each 'precinct = NAME + " " + Num' \
+	-o $@
 
 data/precincts/crawford.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "033"' -o $@
@@ -241,7 +248,7 @@ data/precincts/menard.geojson:
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 Name \
 	-rename-fields precinct=Name \
-	 -o $@
+	-o $@
 
 data/precincts/mercer.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "131"' -o $@
@@ -418,10 +425,6 @@ data/results-unofficial/city-of-chicago.csv:
 
 data/results-unofficial/%.csv: input/results-unofficial/%.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@
-
-data/results-unofficial/lake.csv: input/results-unofficial/%.zip
-	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* | \
-	mapshaper -i - -rename-fields precinct_name=precinct -rename-fields precinct=precinct_num -o $@
 
 input/results-unofficial/dupage.zip:
 	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'

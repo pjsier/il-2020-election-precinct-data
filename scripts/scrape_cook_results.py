@@ -39,12 +39,13 @@ def get_precinct_info(precinct_str):
     else:
         *township_list, _, ward, _, precinct = precinct_str.split(" ")
     township = " ".join([w for w in township_list if w not in ["Ward", "Precinct"]])
+    precinct_id = "-".join([w for w in [ward, precinct] if w])
     return {
         "id": f"cook-{township.lower().replace(' ', '-')}-{ward}-{precinct}",
         "authority": "cook",
         "place": township,
         "ward": ward,
-        "precinct": precinct_str,
+        "precinct": f"{township.upper()} {precinct_id}",
         "precinct_num": precinct,
     }
 

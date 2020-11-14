@@ -11,7 +11,11 @@ def get_id(values):
 def get_contest(contest):
     if "constitution" in contest.lower():
         return "il-constitution"
-    if "united states" in contest.lower() and "president" in contest.lower():
+    if (
+        "president" in contest.lower()
+        or "biden" in contest.lower()
+        or "trump" in contest.lower()
+    ):
         return "us-president"
 
 
@@ -19,10 +23,10 @@ def get_key(contest, choice):
     if contest == "il-constitution":
         vote = "yes" if "yes" in choice.attrs["text"].lower() else "no"
         return f"{contest}-{vote}"
-    if contest == "us-president":
-        if choice.attrs["party"] == "D":
+    if contest == "us-president" and "party" in choice.attrs:
+        if choice.attrs["party"] in ["D", "DEM"]:
             return f"{contest}-dem"
-        if choice.attrs["party"] == "R":
+        if choice.attrs["party"] in ["R", "REP"]:
             return f"{contest}-rep"
 
 
