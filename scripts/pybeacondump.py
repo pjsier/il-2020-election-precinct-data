@@ -205,5 +205,8 @@ if __name__ == "__main__":
     features = get_features(conn, layer_path, layer_id, bbox)
     geojson = dict(type="FeatureCollection", features=list(features))
 
-    with open(filename, "w") as file:
-        json.dump(geojson, file, indent=2)
+    if filename == "-":
+        json.dump(geojson, sys.stdout)
+    else:
+        with open(filename, "w") as f:
+            json.dump(geojson, f)

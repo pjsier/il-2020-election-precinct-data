@@ -10,8 +10,12 @@ clean:
 install:
 	pipenv sync --dev
 
+output/%.geojson: data/precincts/%.geojson data/results-unofficial/%.csv
+	mapshaper -i $< keys=precinct,precinct field-types=precinct:str -o $@
+
 data/precincts/adams.geojson:
-	pipenv run esri2geojson http://www.adamscountyarcserver.com/adamscountyarcserver/rest/services/AdamsCoBaseMapFG_2018/MapServer/43 $@
+	pipenv run esri2geojson http://www.adamscountyarcserver.com/adamscountyarcserver/rest/services/AdamsCoBaseMapFG_2018/MapServer/43 - | \
+	mapshaper -i - -rename-fields precinct_name=Precinct -rename-fields precinct=pwd -o $@
 
 data/precincts/alexander.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "003"' -o $@
@@ -20,7 +24,8 @@ data/precincts/bond.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "005"' -o $@
 
 data/precincts/boone.geojson:
-	pipenv run esri2geojson https://maps.boonecountyil.org/arcgis/rest/services/Clerk_and_Recorder/Voting_Polling_Places/MapServer/1 $@
+	pipenv run esri2geojson https://maps.boonecountyil.org/arcgis/rest/services/Clerk_and_Recorder/Voting_Polling_Places/MapServer/1 - | \
+	mapshaper -i - -rename-fields precinct_num=Precinct -rename-fields precinct=TWP_PRECIN -o $@
 
 data/precincts/brown.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "009"' -o $@
@@ -34,14 +39,13 @@ data/precincts/calhoun.geojson: input/precincts/il_2016.geojson
 data/precincts/carroll.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "015"' -o $@
 
-data/precincts/cass.geojson: input/precincts/cass.geojson
-	mapshaper -i $< \
+data/precincts/cass.geojson:
+	pipenv run python scripts/pybeacondump.py 'https://beacon.schneidercorp.com/Application.aspx?AppID=55&LayerID=375&PageTypeID=1&PageID=916' 1751 - | \
+	mapshaper -i - \
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 Precinct \
+	-rename-fields precinct=Precinct \
 	-o $@
-
-input/precincts/cass.geojson: scripts/pybeacondump.py
-	pipenv run python $< 'https://beacon.schneidercorp.com/Application.aspx?AppID=55&LayerID=375&PageTypeID=1&PageID=916' 1751 $@
 
 data/precincts/champaign.geojson:
 	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 $@
@@ -85,7 +89,8 @@ data/precincts/douglas.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "041"' -o $@
 
 data/precincts/dupage.geojson:
-	pipenv run esri2geojson https://gis.dupageco.org/arcgis/rest/services/Elections/ElectionPrecincts/MapServer/0 $@
+	pipenv run esri2geojson https://gis.dupageco.org/arcgis/rest/services/Elections/ElectionPrecincts/MapServer/0 - | \
+	mapshaper -i - -rename-fields precinct=PrecinctName -o $@
 
 data/precincts/edgar.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "045"' -o $@
@@ -169,10 +174,11 @@ input/precincts/kendall.zip:
 	wget -O $@ 'https://opendata.arcgis.com/datasets/bc2430d057cb487aa51273e4e8762c2e_0.zip?outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D'
 
 data/precincts/knox.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "095" && !NAME.includes("GALESBURG CITY")' -o $@
+	mapshaper -i $< -filter 'COUNTYFP === "095" && !precinct.includes("GALESBURG CITY")' -o $@
 
 data/precincts/lake.geojson:
-	pipenv run esri2geojson https://maps.lakecountyil.gov/arcgis/rest/services/GISMapping/WABPoliticalBoundaries/MapServer/5 $@
+	pipenv run esri2geojson https://maps.lakecountyil.gov/arcgis/rest/services/GISMapping/WABPoliticalBoundaries/MapServer/5 - | \
+	mapshaper -i - -rename-fields precinct=PRECINCT -o $@
 
 data/precincts/lasalle.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "099"' -o $@
@@ -229,14 +235,13 @@ input/precincts/Voting_Precincts.shp: input/precincts/mclean.zip
 input/precincts/mclean.zip:
 	wget -O $@ https://opendata.arcgis.com/datasets/bb22d15063da452587c82339cb7a3322_15.zip
 
-data/precincts/menard.geojson: input/precincts/menard.geojson
-	mapshaper -i $< \
+data/precincts/menard.geojson:
+	pipenv run python scripts/pybeacondump.py 'https://beacon.schneidercorp.com/Application.aspx?App=MenardCountyIL&PageType=Map' 25751 - | \
+	mapshaper -i - \
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 Name \
+	-rename-fields precinct=Name \
 	 -o $@
-
-input/precincts/menard.geojson: scripts/pybeacondump.py
-	pipenv run python $< 'https://beacon.schneidercorp.com/Application.aspx?App=MenardCountyIL&PageType=Map' 25751 $@
 
 data/precincts/mercer.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "131"' -o $@
@@ -244,14 +249,13 @@ data/precincts/mercer.geojson: input/precincts/il_2016.geojson
 data/precincts/monroe.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/AZVIEb4WFZST2UYx/arcgis/rest/services/Voter_Precincts/FeatureServer/0 $@
 
-data/precincts/montgomery.geojson: input/precincts/montgomery.geojson
-	mapshaper -i $< \
+data/precincts/montgomery.geojson:
+	pipenv run python scripts/pybeacondump.py 'https://beacon.schneidercorp.com/Application.aspx?AppID=503&LayerID=7586&PageTypeID=1&PageID=3800' 7705 - | \
+	mapshaper -i - \
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 NAME \
+	-rename-fields precinct=NAME \
 	-o $@
-
-input/precincts/montgomery.geojson: scripts/pybeacondump.py
-	pipenv run python $< 'https://beacon.schneidercorp.com/Application.aspx?AppID=503&LayerID=7586&PageTypeID=1&PageID=3800' 7705 $@
 
 data/precincts/morgan.geojson:
 	wget -qO - 'https://morganmaps.maps.arcgis.com/sharing/rest/content/items/8d7a6a2f54fa4686b6cbcfc47c6fb4d1/data?f=json' | \
@@ -262,14 +266,12 @@ data/precincts/morgan.geojson:
 data/precincts/moultrie.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "139"' -o $@
 
-data/precincts/ogle.geojson: input/precincts/ogle.geojson
-	mapshaper -i $< \
+data/precincts/ogle.geojson:
+	pipenv run python scripts/pybeacondump.py 'https://beacon.schneidercorp.com/Application.aspx?AppID=71&LayerID=592&PageTypeID=1&PageID=953' 5178 - | \
+	mapshaper -i - \
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 precinct \
 	-o $@
-
-input/precincts/ogle.geojson: scripts/pybeacondump.py
-	pipenv run python $< 'https://beacon.schneidercorp.com/Application.aspx?AppID=71&LayerID=592&PageTypeID=1&PageID=953' 5178 $@
 
 data/precincts/peoria.geojson:
 	pipenv run esri2geojson https://gis.peoriacounty.org/arcgis/rest/services/DP/Elections/MapServer/8 $@
@@ -334,11 +336,9 @@ data/precincts/tazewell.geojson:
 data/precincts/union.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "181"' -o $@
 
-data/precincts/vermilion.geojson: input/precincts/vermilion.geojson
-	mapshaper -i $< -filter '!PRECINCT_E.includes("DANVILLE CITY")' -o $@
-
-input/precincts/vermilion.geojson:
-	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/VermilionIL/VermilionIL_PAT_GIS/MapServer/12 $@
+data/precincts/vermilion.geojson:
+	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/VermilionIL/VermilionIL_PAT_GIS/MapServer/12 - | \
+	mapshaper -i - -filter '!PRECINCT_E.includes("DANVILLE CITY")' -o $@
 
 data/precincts/wabash.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "185"' -o $@
@@ -359,7 +359,8 @@ data/precincts/whiteside.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/l0M0OC6J9QAHCiGx/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 $@
 
 data/precincts/will.geojson:
-	pipenv run esri2geojson https://gis.willcountyillinois.com/arcgis/rest/services/PoliticalLayers/Precincts/MapServer/0 $@
+	pipenv run esri2geojson https://gis.willcountyillinois.com/arcgis/rest/services/PoliticalLayers/Precincts/MapServer/0 - | \
+	mapshaper -i - -rename-fields precinct=NAME -o $@
 
 data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "199"' -o $@
@@ -380,7 +381,11 @@ data/precincts/city-of-chicago.geojson: input/precincts/city-of-chicago.geojson 
 	-o $@
 
 input/precincts/city-of-chicago.geojson:
-	wget -O $@ https://raw.githubusercontent.com/datamade/chicago-municipal-elections/master/precincts/2019_precincts.geojson
+	wget -O - https://raw.githubusercontent.com/datamade/chicago-municipal-elections/master/precincts/2019_precincts.geojson | \
+	mapshaper -i - \
+	-rename-fields precinct_num=PRECINCT \
+	-each 'precinct = WARD.toString().padStart(2, "0") + precinct_num.toString().padStart(3, "0")' \
+	-o $@
 
 input/precincts/city-of-chicago-wards.geojson:
 	wget -O $@ 'https://data.cityofchicago.org/api/geospatial/sp34-6z76?method=export&format=GeoJSON'
@@ -395,7 +400,7 @@ data/precincts/city-of-rockford.geojson:
 	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "City of Rockford" > $@
 
 input/precincts/il_2016.geojson: input/precincts/il_2016.shp
-	mapshaper -i $< -proj wgs84 -filter-fields COUNTYFP,NAME -o $@
+	mapshaper -i $< -proj wgs84 -filter-fields COUNTYFP,NAME -rename-fields precinct=NAME -o $@
 
 input/precincts/il_2016.shp: input/precincts/il_2016.zip
 	unzip -u $< -d $(dir $@)
@@ -413,6 +418,10 @@ data/results-unofficial/city-of-chicago.csv:
 
 data/results-unofficial/%.csv: input/results-unofficial/%.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@
+
+data/results-unofficial/lake.csv: input/results-unofficial/%.zip
+	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* | \
+	mapshaper -i - -rename-fields precinct_name=precinct -rename-fields precinct=precinct_num -o $@
 
 input/results-unofficial/dupage.zip:
 	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'

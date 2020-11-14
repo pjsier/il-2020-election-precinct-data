@@ -12,6 +12,7 @@ COLUMNS = [
     "place",
     "ward",
     "precinct",
+    "precinct_num",
     "registered",
     "ballots",
     "us-president-dem",
@@ -43,7 +44,8 @@ def get_precinct_info(precinct_str):
         "authority": "cook",
         "place": township,
         "ward": ward,
-        "precinct": precinct,
+        "precinct": precinct_str,
+        "precinct_num": precinct,
     }
 
 

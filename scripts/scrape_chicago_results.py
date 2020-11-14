@@ -11,6 +11,7 @@ COLUMNS = [
     "place",
     "ward",
     "precinct",
+    "precinct_num",
     "registered",
     "ballots",
     "us-president-dem",
@@ -50,7 +51,8 @@ def get_row_values(row, ward, headers, election):
         "authority": "chicago",
         "place": "chicago",
         "ward": ward,
-        "precinct": int(values[0]),
+        "precinct": f"{str(ward).zfill(2)}{str(values[0]).zfill(3)}",
+        "precinct_num": int(values[0]),
     }
     for k, v in COLUMN_MAP.items():
         if k in vote_values_dict:
