@@ -13,9 +13,6 @@ install:
 output/%.geojson: data/precincts/%.geojson data/results-unofficial/%.csv
 	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -o $@
 
-output/lake.geojson: data/precincts/lake.geojson data/results-unofficial/lake.csv
-	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct_num,precinct field-types=precinct_num:str,precinct:str -o $@
-
 data/precincts/adams.geojson:
 	pipenv run esri2geojson http://www.adamscountyarcserver.com/adamscountyarcserver/rest/services/AdamsCoBaseMapFG_2018/MapServer/43 - | \
 	mapshaper -i - -rename-fields precinct_name=Precinct -rename-fields precinct=pwd -o $@
@@ -97,7 +94,10 @@ data/precincts/douglas.geojson: input/precincts/il_2016.geojson
 
 data/precincts/dupage.geojson:
 	pipenv run esri2geojson https://gis.dupageco.org/arcgis/rest/services/Elections/ElectionPrecincts/MapServer/0 - | \
-	mapshaper -i - -rename-fields precinct=PrecinctName -o $@
+	mapshaper -i - \
+	-rename-fields precinct=PrecinctName \
+	-each 'precinct = precinct.replace(Precinct.toString(), Precinct.toString().padStart(3, "0"))' \
+	-o $@
 
 data/precincts/edgar.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "045"' -o $@
@@ -184,8 +184,8 @@ data/precincts/knox.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "095" && !precinct.includes("GALESBURG CITY")' -o $@
 
 data/precincts/lake.geojson:
-	pipenv run esri2geojson https://maps.lakecountyil.gov/arcgis/rest/services/GISMapping/WABPoliticalBoundaries/MapServer/5 - | \
-	mapshaper -i - -rename-fields precinct=PRECINCT -o $@
+	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com//IL/Lake/105841/271143/json/7cdabc13-5da7-496f-9853-8604f5b68072.json Lake | \
+	mapshaper -i - -rename-fields precinct=Name -o $@
 
 data/precincts/lasalle.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "099"' -o $@
@@ -367,7 +367,9 @@ data/precincts/whiteside.geojson:
 
 data/precincts/will.geojson:
 	pipenv run esri2geojson https://gis.willcountyillinois.com/arcgis/rest/services/PoliticalLayers/Precincts/MapServer/0 - | \
-	mapshaper -i - -rename-fields precinct=NAME -o $@
+	mapshaper -i - \
+	-rename-fields precinct=NAME \
+	-o $@
 
 data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "199"' -o $@
@@ -429,6 +431,7 @@ data/results-unofficial/%.csv: input/results-unofficial/%.zip
 input/results-unofficial/dupage.zip:
 	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
 
+# TODO: More precincts than results rows for Lake
 input/results-unofficial/lake.zip:
 	wget -O $@ https://results.enr.clarityelections.com//IL/Lake/105841/270844/reports/detailxml.zip
 
