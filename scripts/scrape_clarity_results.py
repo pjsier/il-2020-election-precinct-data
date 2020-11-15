@@ -35,6 +35,10 @@ def get_key(contest, choice):
 if __name__ == "__main__":
     soup = BeautifulSoup(sys.stdin, "xml")
 
+    to_upper = False
+    if len(sys.argv) > 2:
+        to_upper = sys.argv[2] == "upper"
+
     result_dict = {}
 
     for precinct in soup.find("VoterTurnout").find_all("Precinct"):
@@ -42,12 +46,15 @@ if __name__ == "__main__":
             continue
         *place_list, precinct_str = precinct.attrs["name"].split()
         place = " ".join([p for p in place_list if p.lower() != "pct"])
-        result_dict[precinct.attrs["name"]] = {
+        precinct_text = precinct.attrs["name"].replace("  ", " ")
+        if to_upper:
+            precinct_text = precinct_text.upper()
+        result_dict[precinct_text] = {
             "id": get_id([sys.argv[1], place, "", precinct_str]),
             "authority": sys.argv[1],
             "place": place,
             "ward": "",
-            "precinct": precinct.attrs["name"].replace("  ", " "),
+            "precinct": precinct_text,
             "precinct_num": precinct_str,
             "registered": int(precinct.attrs["totalVoters"]),
             "ballots": int(precinct.attrs["ballotsCast"]),
@@ -68,11 +75,14 @@ if __name__ == "__main__":
             for precinct in choice.find_all("Precinct"):
                 if "presidential" in precinct.attrs["name"].lower():
                     continue
-                result_dict[precinct.attrs["name"]][f"{contest_val}-votes"] += int(
+                precinct_text = precinct.attrs["name"].replace("  ", " ")
+                if to_upper:
+                    precinct_text = precinct_text.upper()
+                result_dict[precinct_text][f"{contest_val}-votes"] += int(
                     precinct.attrs["votes"]
                 )
                 if choice_key:
-                    result_dict[precinct.attrs["name"]][choice_key] += int(
+                    result_dict[precinct_text][choice_key] += int(
                         precinct.attrs["votes"]
                     )
 
