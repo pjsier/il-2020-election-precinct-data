@@ -286,7 +286,8 @@ data/precincts/ogle.geojson:
 	-o $@
 
 data/precincts/peoria.geojson:
-	pipenv run esri2geojson https://gis.peoriacounty.org/arcgis/rest/services/DP/Elections/MapServer/8 $@
+	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/1 - | \
+	mapshaper -i - -rename-fields precinct=PRECINCTID -o $@
 
 data/precincts/perry.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "145"' -o $@
@@ -432,7 +433,7 @@ input/precincts/il_2016.geojson: input/precincts/il_2016.shp
 input/precincts/il_2016.shp: input/precincts/il_2016.zip
 	unzip -u $< -d $(dir $@)
 
-# TODO: Citation guidelines https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH&version=46.0
+# Citation guidelines https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH&version=46.0
 # https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/NH5S2I/A652IT&version=46.0
 input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
@@ -459,6 +460,18 @@ data/results-unofficial/madison.csv: input/results-unofficial/madison.json
 
 input/results-unofficial/madison.json:
 	wget -O $@ 'https://services.arcgis.com/Z0kKj2K728ngqqrp/ArcGIS/rest/services/ElectionResults_join/FeatureServer/1/query?where=%28contest%3D%27AMENDMENT+QUESTION%27+OR+contest%3D%27PRESIDENT+AND+VICE+PRESIDENT%27%29+AND+jurisdictiontype%3D%27Precinct%27&objectIds=&time=&resultType=none&outFields=jurisdictionname%2Cregvoters%2Cballotscast%2Ccontest%2Ccandidate%2Cnumvotes&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
+
+data/results-unofficial/peoria.csv: input/results-unofficial/peoria-turnout.csv input/results-unofficial/peoria-president.csv
+	xsv join precinct $< precinct $(filter-out $<,$^) > $@
+
+input/results-unofficial/peoria-turnout.csv:
+	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/1 - | \
+	mapshaper -i - -rename-fields precinct=PRECINCTID,registered=REGVOTERS,ballots=TOTBALLOTS -filter-fields precinct,registered,ballots -o $@
+
+input/results-unofficial/peoria-president.csv:
+	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/3 - | \
+	mapshaper -i - -rename-fields precinct=PRECINCTID,totalvotes=Total_candidate_Votes -filter-fields precinct,CANDIDATE,PARTY,NUMVOTES,totalvotes -o format=csv - | \
+	pipenv run python scripts/process_peoria_results.py > $@
 
 data/results-unofficial/st-clair.csv: input/results-unofficial/st-clair-results.csv input/results-unofficial/st-clair-registered.csv
 	xsv join precinct $< precinct $(filter-out $<,$^) | \
