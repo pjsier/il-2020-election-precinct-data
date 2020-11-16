@@ -12,3 +12,4 @@ input/results-unofficial/*
 !input/results-unofficial/.keep
 data/results-unofficial/*
 !data/results-unofficial/.keep
+scripts/tabula.jar

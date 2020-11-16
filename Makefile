@@ -414,7 +414,11 @@ data/precincts/city-of-danville.geojson:
 	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/463571faad874d958bcf15661f49f25c/rest/services/Administrative/Voting_Precincts/MapServer/1 $@
 
 data/precincts/city-of-east-st-louis.geojson: input/precincts/st-clair.geojson
-	mapshaper -i $< -filter 'prec_name1.includes("East St")' -o $@
+	mapshaper -i $< \
+	-filter 'prec_name1.includes("East St")' \
+	-rename-fields precinct=prec_name2 \
+	-each 'precinct = precinct.replace("East", "E")' \
+	-o $@
 
 data/precincts/city-of-rockford.geojson:
 	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "City of Rockford" > $@
@@ -454,11 +458,40 @@ input/results-unofficial/st-clair-results.csv:
 	'https://stclair.platinumelectionresults.com/reports/township/6/pd/12060,12062,12087,12063,12086,12085,12084,12083,12082,12081,12080,12079,12078,12077,12076,12075,12074,12073,12072,12071,12070,12069,12068,12067,12066,12065,12064,12036,12061,12035,12007,12005,12004,12003,12002,12105,12104,12103,12102,12101,12100,12099,12098,12097,12162,12161,12160,12159,12158,12157,12156,12155,12154,12153,12152,12151,12150,12149,12148,12147,12146,12145,12168,12170,12195,12171,12194,12193,12192,12191,12180,12179,12178,12177,12176,12175,12174,12173,12172,12144,12169,12143,12115,12113,12112,12111,12110,12109,12108,12107,12106,12116,12141,12117,12138,12137,12136,11997,11996,11995,12133,12140,12139,12001,12000,11999,11998,12128,12127,12126,12125,12121,12135,12134,11989,11988,11987,11986,11985,11984,11983,12006,12008,12033,12009,12032,12031,12030,12029,12028,12027,12120,12132,12118,12026,12025,12024,12023,12022,12021,12020,12019,12018,12017,12016,12015,12014,12013,12012,12011,12010,12034,12089,12142,12090,12167,12166,12165,12164,12163,12124,12123,12122,12119,11982,11994,11993,11992,11991,11990,12131,12130,12129,12114,12190,12189,12188,12187,12186,12185,12184,12183,12182,12181,12096,12095,12094,12093,12092,12091' | \
 	pipenv run python scripts/process_platinum_results.py st-clair > $@
 
+data/results-unofficial/tazewell.csv: input/results-unofficial/tazewell-constitution.csv input/results-unofficial/tazewell-president.csv
+	xsv join 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_tazewell_results.py > $@
+
+input/results-unofficial/tazewell-president.csv: input/results-unofficial/tazewell.pdf
+	java -jar scripts/tabula.jar -c %23,27.5,32,39.4,48.5,57,65,73.5 -a %25,0,100,100 -p 4-6 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-5 > $@
+
+input/results-unofficial/tazewell-constitution.csv: input/results-unofficial/tazewell.pdf
+	java -jar scripts/tabula.jar -c %23,27.5,32,36,40,44,48,52,57 -a %25,0,100,100 -p 1-3 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-3,6-7,9 > $@
+
+input/results-unofficial/tazewell.pdf:
+	wget -O $@ https://www.tazewell.com/countyclerk/images/Elections/Nov3-2020-Unofficial-of-Votes-Cast.pdf
+
 data/results-unofficial/winnebago.csv: input/results-unofficial/winnebago.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py winnebago upper > $@
 
 data/results-unofficial/city-of-chicago.csv:
 	pipenv run python scripts/scrape_chicago_results.py > $@
+
+data/results-unofficial/city-of-east-st-louis.csv: input/results-unofficial/city-of-east-st-louis-results.csv input/results-unofficial/city-of-east-st-louis-registered.csv
+	xsv join precinct $< precinct $(filter-out $<,$^) | \
+	xsv select 'id,authority,place,ward,precinct,ballots,registered,"us-president-dem","us-president-rep","us-president-votes","il-constitution-yes","il-constitution-no","il-constitution-votes"' > $@
+
+input/results-unofficial/city-of-east-st-louis-registered.csv:
+	pipenv run python scripts/scrape_platinum_registered.py https://stclair.platinumelectionresults.com/turnouts/precincts/48 > $@
+
+input/results-unofficial/city-of-east-st-louis-results.csv:
+	wget -qO - \
+	'https://stclair.platinumelectionresults.com/reports/township/48/pd/11551,11537,11544,11545,11546,11547,11548,11549,11527,11538,11528,11529,11530,11531,11532,11533,11534,11535,11536,11539,11550,11540,11541,11542,11543' | \
+	pipenv run python scripts/process_platinum_results.py city-of-east-st-louis > $@
 
 data/results-unofficial/%.csv: input/results-unofficial/%.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@
