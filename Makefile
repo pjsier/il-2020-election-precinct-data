@@ -171,7 +171,8 @@ data/precincts/kane.geojson:
 	mapshaper -i - -rename-fields precinct=NPrecinct -o $@
 
 data/precincts/kankakee.geojson:
-	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 $@
+	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 - | \
+	mapshaper -i - -each 'precinct = name.toUpperCase()' -o $@
 
 data/precincts/kendall.geojson: input/precincts/Kendall_County_Voting_Precinct.shp
 	mapshaper -i $< -proj wgs84 -o $@
@@ -345,7 +346,8 @@ data/precincts/stephenson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "177"' -o $@
 
 data/precincts/tazewell.geojson:
-	pipenv run esri2geojson https://gis.tazewell.com/maps/rest/services/ElectionPoll/ElectionPollingPlaces/MapServer/1 $@
+	pipenv run esri2geojson https://gis.tazewell.com/maps/rest/services/ElectionPoll/ElectionPollingPlaces/MapServer/1 - | \
+	mapshaper -i - -each 'precinct = NAME.toUpperCase().replace("BOYTON", "BOYNTON").replace("DEERCREEK", "DEER CREEK")' -o $@
 
 data/precincts/union.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "181"' -o $@
@@ -373,7 +375,7 @@ data/precincts/whiteside.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/l0M0OC6J9QAHCiGx/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 $@
 
 data/precincts/will.geojson:
-	pipenv run esri2geojson https://gis.willcountyillinois.com/arcgis/rest/services/PoliticalLayers/Precincts/MapServer/0 - | \
+	pipenv run esri2geojson https://gis.willcountyillinois.com/hosting/rest/services/PoliticalLayers/Precincts/MapServer/0 - | \
 	mapshaper -i - \
 	-rename-fields precinct=NAME \
 	-o $@
@@ -437,8 +439,18 @@ input/precincts/il_2016.zip:
 data/results-unofficial/cook.csv:
 	pipenv run python scripts/scrape_cook_results.py > $@
 
+# data/results-unofficial/champaign.csv: input/results-unofficial/champaign.txt
+	
+input/results-unofficial/champaign.txt:
+	wget -O $@ https://ccco-results.s3.us-east-2.amazonaws.com/2020/docs/march/11_03_2020_precinct.HTM
+
 data/results-unofficial/kane.csv:
 	pipenv run python scripts/scrape_kane_results.py > $@
+
+# data/results-unofficial/kankakee.csv:
+
+# TODO: https://15wb253pgifv3qzuu9h7yren-wpengine.netdna-ssl.com/wp-content/uploads/2020/11/canvass.pdf
+# data/results-unofficial/lasalle.csv:
 
 data/results-unofficial/madison.csv: input/results-unofficial/madison.json
 	cat $< | pipenv run python scripts/process_madison.py > $@
@@ -498,6 +510,9 @@ data/results-unofficial/%.csv: input/results-unofficial/%.zip
 
 input/results-unofficial/dupage.zip:
 	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
+
+input/results-unofficial/kankakee.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Kankakee/106271/267759/reports/detailxml.zip
 
 # TODO: More precincts than results rows for Lake
 input/results-unofficial/lake.zip:

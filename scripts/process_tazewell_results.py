@@ -1,4 +1,5 @@
 import csv
+import re
 import sys
 
 COLUMNS = [
@@ -24,13 +25,20 @@ if __name__ == "__main__":
     for row in rows[1:]:
         if row[0] in ["PRESIDENTIAL BALLOT", "Total"]:
             continue
+        precinct_split = row[0].split()
+        if len(precinct_split) == 1 or not re.search(r"\d", row[0]):
+            precinct = f"{row[0]} 01"
+        else:
+            *precinct_name_split, precinct_num = precinct_split
+            precinct_name = " ".join(precinct_name_split).replace("LT M", "LITTLE M")
+            precinct = f"{precinct_name} {precinct_num.zfill(2)}"
         results.append(
             {
                 "id": "",
                 "authority": "tazewell",
                 "place": "",
                 "ward": "",
-                "precinct": row[0],
+                "precinct": precinct,
                 "registered": int(row[1]),
                 "ballots": int(row[2]),
                 "us-president-dem": int(row[10].split()[0]),
