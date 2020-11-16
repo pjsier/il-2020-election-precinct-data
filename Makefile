@@ -48,7 +48,8 @@ data/precincts/cass.geojson:
 	-o $@
 
 data/precincts/champaign.geojson:
-	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 $@
+	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 - | \
+	mapshaper -i - -each 'precinct = TWPNAME.toUpperCase() + " " + PrecinctNum' -o $@
 
 data/precincts/christian.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "021"' -o $@
@@ -439,7 +440,8 @@ input/precincts/il_2016.zip:
 data/results-unofficial/cook.csv:
 	pipenv run python scripts/scrape_cook_results.py > $@
 
-# data/results-unofficial/champaign.csv: input/results-unofficial/champaign.txt
+data/results-unofficial/champaign.csv: input/results-unofficial/champaign.txt
+	cat $< | pipenv run python scripts/process_champaign_results.py > $@
 	
 input/results-unofficial/champaign.txt:
 	wget -O $@ https://ccco-results.s3.us-east-2.amazonaws.com/2020/docs/march/11_03_2020_precinct.HTM
