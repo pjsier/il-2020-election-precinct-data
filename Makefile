@@ -303,6 +303,7 @@ data/precincts/montgomery.geojson:
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 NAME \
 	-rename-fields precinct=NAME \
+	-each 'precinct = precinct.trim()' \
 	-o $@
 
 data/precincts/morgan.geojson:
@@ -546,15 +547,7 @@ data/results-unofficial/henry.csv:
 
 data/results-unofficial/jersey.csv:
 	wget -qO - 'https://www.jerseycountyclerk-il.com/wp-content/2020-elections/20GILJER/el45a.HTM' | \
-	pipenv run python scripts/process_text_results.py jersey | \
-	mapshaper -i - format=csv \
-	-each 'precinct = precinct.replace(" 0", " ")' \
-	-each 'precinct = precinct.replace(" 3", "").replace(" 4", "").replace(" 17", "").replace(" 23", "").replace(" 24", "").replace(" 25", "")' \
-	-each 'precinct = precinct.includes("JERSEY") ? "JERSEY " + (+precinct.split(" ")[1] - 4).toString() : precinct' \
-	-each 'precinct = precinct.replace("15", "1").replace("16", "2")' \
-	-each 'precinct = precinct.replace("21", "1").replace("22", "2")' \
-	-each 'precinct = precinct.replace("18", "1").replace("19", "2").replace("20", "3")' \
-	-o format=csv $@
+	pipenv run python scripts/process_text_results.py jersey > $@
 
 data/results-unofficial/kane.csv:
 	pipenv run python scripts/scrape_kane_results.py > $@
@@ -577,12 +570,20 @@ data/results-unofficial/marion.csv:
 	pipenv run python scripts/process_platinum_results.py marion | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
+data/results-unofficial/mercer.csv:
+	wget -qO - 'http://www.mercercountyil.org/Portals/MercerCounty/Public_Documents/Elections/2020/General%20Election/11-03-20%20Precinct%20Report%20-%20Unofficial%20Results.txt' | \
+	pipenv run python scripts/process_text_results.py mercer > $@
+
 data/results-unofficial/monroe.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/12/pd/13651,13666,13668,13685,13669,13684,13683,13682,13681,13680,13679,13678,13677,13676,13675,13674,13673,13672,13671,13670,13650,13686,13667,13665,13664,13663,13662,13661,13660,13659,13658,13657,13656,13655,13654,13653,13652' | \
 	pipenv run python scripts/process_platinum_results.py monroe | \
 	mapshaper -i - format=csv \
 	-each 'precinct = precinct.replace("Precinct ", "")' \
 	-o $@
+
+data/results-unofficial/montgomery.csv:
+	wget -qO - 'https://montgomeryco.com/countyclerk/EL30.HTM' | \
+	pipenv run python scripts/process_text_results.py montgomery > $@
 
 data/results-unofficial/peoria.csv: input/results-unofficial/peoria-turnout.csv input/results-unofficial/peoria-president.csv
 	xsv join precinct $< precinct $(filter-out $<,$^) > $@

@@ -29,7 +29,12 @@ if __name__ == "__main__":
 
     results = []
 
-    IGNORE_LINE_STRS = ["REPORT-GROUP DETAIL", "OFFICIAL RESULTS", "RUN TIME"]
+    IGNORE_LINE_STRS = [
+        "PRECINCT REPORT",
+        "REPORT-GROUP DETAIL",
+        "OFFICIAL RESULTS",
+        "RUN TIME",
+    ]
 
     for precinct_section in precinct_sections:
         precinct_split = [
@@ -37,18 +42,31 @@ if __name__ == "__main__":
             for s in re.split(r"[\r\n]{3,6}", precinct_section)
             if not any(ignore_str in s for ignore_str in IGNORE_LINE_STRS)
         ]
+        # print(len(precinct_split))
         if len(precinct_split) == 0:
             continue
         precinct_line = precinct_split[0].split("\n")[0].strip()[2:]
-        precinct_num, *precinct_parts = precinct_line.split()
-        # TODO: Replace this
-        if precinct_parts[0] in ["BROWN", "COMPROMISE", "SADORUS", "SCOTT"]:
-            place = precinct_parts[0]
+        # Champaign handles precinct numbering differently
+        if authority == "champaign":
+            precinct_num, *precinct_parts = precinct_line.split()
+            if precinct_parts[0] in ["BROWN", "COMPROMISE", "SADORUS", "SCOTT"]:
+                place = precinct_parts[0]
+            else:
+                place = " ".join([p for p in precinct_parts if not re.match(r"\d+", p)])
+            place = place.replace(".", "")
+            precinct = f"{place} {precinct_num}"
         else:
-            place = " ".join([p for p in precinct_parts if not re.match(r"\d+", p)])
+            _, *precinct_parts = precinct_line.split()
+            precinct_num = ""
+            precinct = " ".join(precinct_parts).strip()
+            place = precinct
+            if precinct_parts[-1].isdigit():
+                precinct_num = precinct_parts[-1]
+                place = " ".join(precinct_parts[:-1]).strip()
 
-        place = place.replace(".", "")
-        precinct = f"{place} {precinct_num}"
+        if "PRESIDENT ONLY" in precinct:
+            continue
+
         precinct_dict = {
             "id": f"{authority}-{place.lower().replace(' ', '-')}--{precinct_num}",
             "authority": authority,
@@ -68,11 +86,20 @@ if __name__ == "__main__":
                 precinct_dict["ballots"] = int(
                     re.search(r"[\d,]+", line).group().replace(",", "")
                 )
-
         for contest in precinct_split[1:]:
             contest_lines = contest.split("\n")
             contest_name = contest_lines[0].strip()
-            if not any([p in contest_name for p in ["PRESIDENT AND", "CONSTITUTION"]]):
+            if not any(
+                [
+                    p in contest_name
+                    for p in [
+                        "PRESIDENT AND",
+                        "PRESIDENT and",
+                        "CONSTITUTION",
+                        "INCOME TAX",
+                    ]
+                ]
+            ):
                 continue
             president_votes = 0
             constitution_votes = 0
@@ -125,6 +152,12 @@ if __name__ == "__main__":
                 and "us-president-votes" not in precinct_dict
             ):
                 precinct_dict["us-president-votes"] = president_votes
+        # For authorities like Mercer that can split in to multiple chunks
+        if (
+            "us-president-votes" not in precinct_dict
+            and "il-constitution-votes" not in precinct_dict
+        ):
+            continue
         results.append(precinct_dict)
 
     writer = csv.DictWriter(sys.stdout, fieldnames=COLUMNS)
