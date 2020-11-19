@@ -8,6 +8,7 @@ COLUMNS = [
     "place",
     "ward",
     "precinct",
+    "registered",
     "ballots",
     "us-president-dem",
     "us-president-rep",
@@ -29,6 +30,7 @@ if __name__ == "__main__":
             ]
         ):
             continue
+        # TODO: Handle multiple words without precinct num
         *township_list, precinct_num = row["Precinct Name"].split()
         township_str = " ".join(township_list)
         row_dict = {
@@ -37,7 +39,7 @@ if __name__ == "__main__":
             "place": township_str,
             "ward": "",
             "precinct": row["Precinct Name"],
-            # "registered": row["Registered Voters"],
+            "registered": row["Registered Voters"],
             "ballots": row["Total Ballots Cast"],
         }
 

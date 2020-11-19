@@ -104,4 +104,5 @@ city-of-bloomington
 city-of-chicago
 city-of-danville
 city-of-east-st-louis
+city-of-galesburg
 city-of-rockford
