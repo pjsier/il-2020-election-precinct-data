@@ -224,7 +224,11 @@ data/precincts/lawrence.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "101"' -o $@
 
 data/precincts/lee.geojson:
-	pipenv run esri2geojson https://gis.leecountyil.com/server/rest/services/Election/Election_Precincts/MapServer/0 $@
+	pipenv run esri2geojson https://gis.leecountyil.com/server/rest/services/Election/Election_Precincts/MapServer/0 - | \
+	mapshaper -i - \
+	-each 'precinct = LYR_NAME.toUpperCase()' \
+	-filter 'precinct !== "ROCK RIVER"' \
+	-o $@
 
 data/precincts/livingston.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "105"' -o $@
@@ -505,6 +509,14 @@ input/precincts/il_2016.shp: input/precincts/il_2016.zip
 input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
 
+input/results-unofficial/boone-constitution.csv: input/results-unofficial/boone.pdf
+	java -jar scripts/tabula.jar -c %23,27.5,32,36,40,44,48,52,57 -a %25,0,100,100 -p 1-4 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-3,6-7,9 > $@
+
+input/results-unofficial/boone.pdf:
+	wget -O $@ https://cms8.revize.com/revize/booneil/Departments/Clerk-Recorder/voting/2020_nov_03_il_boone_SOVCDetail.pdf
+
 # TODO: Registered not being pulled correctly
 data/results-unofficial/brown.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/127/pd/12384,12383,12382,12381,12380,12379,12378,12377,12376,12375,12374,12373,12372,12371' | \
@@ -549,6 +561,9 @@ data/results-unofficial/jersey.csv:
 	wget -qO - 'https://www.jerseycountyclerk-il.com/wp-content/2020-elections/20GILJER/el45a.HTM' | \
 	pipenv run python scripts/process_text_results.py jersey > $@
 
+data/results-unofficial/jo-daviess.csv:
+	pipenv run python scripts/scrape_jo_daviess_results.py > $@ 
+
 data/results-unofficial/kane.csv:
 	pipenv run python scripts/scrape_kane_results.py > $@
 
@@ -558,6 +573,22 @@ data/results-unofficial/kane.csv:
 
 # TODO: https://15wb253pgifv3qzuu9h7yren-wpengine.netdna-ssl.com/wp-content/uploads/2020/11/canvass.pdf
 # data/results-unofficial/lasalle.csv:
+
+# TODO: Add headers, details
+data/results-unofficial/lee.csv: input/results-unofficial/lee-constitution.csv input/results-unofficial/lee-president.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_lee_results.py > $@
+
+input/results-unofficial/lee-constitution.csv: input/results-unofficial/lee.pdf
+	java -jar scripts/tabula.jar -c %23,27.5,32,37,43,48,54,60,72,76,81,87 -a %27,0,100,100 -p 1 $< | \
+	xsv select --no-headers 1-3,7,10,12 > $@
+
+input/results-unofficial/lee-president.csv: input/results-unofficial/lee.pdf
+	java -jar scripts/tabula.jar -c %23,27.5,32,37,43,48,54,60,65,70,75,82 -a %27,0,100,100 -p 2 $< | \
+	xsv select --no-headers 1,2,4,8,10,12 > $@
+
+input/results-unofficial/lee.pdf:
+	wget -O $@ https://www.leecountyil.com/DocumentCenter/View/1457/11032020Final-Official-Results
 
 data/results-unofficial/madison.csv: input/results-unofficial/madison.json
 	cat $< | pipenv run python scripts/process_madison.py > $@

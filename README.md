@@ -12,7 +12,7 @@
 
 ## Prerequisites
 
-Make, Python, `jq`, `mapshaper`
+Make, Python, `jq`, `mapshaper`, `xsv`
 
 ## Methodology
 
