@@ -36,7 +36,7 @@ if __name__ == "__main__":
         precinct_name = precinct_name_cell.text.strip()
         precinct_dict = {
             "id": f"{authority}---{precinct_name.replace(' ', '-')}",
-            "authority": "",
+            "authority": authority,
             "place": "",
             "ward": "",
             "precinct": precinct_name,
