@@ -4,7 +4,7 @@ all: $(PRECINCT_FILES)
 
 .PHONY: clean
 clean:
-	rm -f data/precincts/*.* input/precincts/*.*
+	rm -f data/precincts/*.geojson data/results-unofficial/*.csv input/precincts/*.* input/results-unofficial/*.*
 
 .PHONY: install
 install:
@@ -509,16 +509,33 @@ input/precincts/il_2016.shp: input/precincts/il_2016.zip
 input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
 
+data/results-unofficial/boone.csv: input/results-unofficial/boone-constitution.csv input/results-unofficial/boone-president.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_boone_results.py > $@
+
 input/results-unofficial/boone-constitution.csv: input/results-unofficial/boone.pdf
-	java -jar scripts/tabula.jar -c %23,27.5,32,36,40,44,48,52,57 -a %25,0,100,100 -p 1-4 $< | \
-	xsv slice -s 1 | \
-	xsv select 1-3,6-7,9 > $@
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,48,53,57,61 -a %25,0,100,100 -p 1-7 $< | \
+	xsv slice --no-headers -s 2 | \
+	xsv select 1-3,7-8,10 | \
+	pipenv run python scripts/process_flatten_precinct_csv.py > $@
+
+input/results-unofficial/boone-president.csv: input/results-unofficial/boone.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44 -a %25,0,100,100 -p 8-11 $< | \
+	xsv slice --no-headers -s 2 | \
+	xsv select 1-4,6 | \
+	pipenv run python scripts/process_flatten_precinct_csv.py > $@
 
 input/results-unofficial/boone.pdf:
 	wget -O $@ https://cms8.revize.com/revize/booneil/Departments/Clerk-Recorder/voting/2020_nov_03_il_boone_SOVCDetail.pdf
 
-# TODO: Registered not being pulled correctly
-data/results-unofficial/brown.csv:
+data/results-unofficial/brown.csv: input/results-unofficial/brown-registered.csv input/results-unofficial/brown-results.csv
+	xsv join precinct $< precinct $(filter-out $<,$^) | \
+	xsv select 'id,authority,place,ward,precinct,ballots,registered,"us-president-dem","us-president-rep","us-president-votes","il-constitution-yes","il-constitution-no","il-constitution-votes"' > $@
+
+input/results-unofficial/brown-registered.csv:
+	pipenv run python scripts/scrape_platinum_registered.py https://platinumelectionresults.com/turnouts/precincts/127 > $@
+
+input/results-unofficial/brown-results.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/127/pd/12384,12383,12382,12381,12380,12379,12378,12377,12376,12375,12374,12373,12372,12371' | \
 	pipenv run python scripts/process_platinum_results.py brown > $@
 
@@ -541,6 +558,9 @@ data/results-unofficial/cook.csv:
 
 data/results-unofficial/dekalb.csv:
 	pipenv run python scripts/scrape_election_console_results.py dekalb 'http://dekalb.il.electionconsole.com/electionsummary.php?e=2020%20General' > $@
+
+input/results-unofficial/dupage.zip:
+	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
 
 data/results-unofficial/fayette.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/15/pd/13856,13855,13830,13831,13832,13833,13834,13835,13836,13837,13838,13839,13840,13841,13842,13843,13844,13845,13846,13847,13848,13849,13850,13851,13852,13853,13854,13829' | \
@@ -567,9 +587,16 @@ data/results-unofficial/jo-daviess.csv:
 data/results-unofficial/kane.csv:
 	pipenv run python scripts/scrape_kane_results.py > $@
 
+input/results-unofficial/kankakee.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Kankakee/106271/267759/reports/detailxml.zip
+
 # TODO: Pending
 # data/results-unofficial/kendall.csv:
 # 	pipenv run python scripts/scrape_election_console_results.py kendall 'http://kendall.il.electionconsole.com/electionsummary.php?e=2020%20General%20Election' > $@
+
+# TODO: More precincts than results rows for Lake
+input/results-unofficial/lake.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Lake/105841/270844/reports/detailxml.zip
 
 # TODO: https://15wb253pgifv3qzuu9h7yren-wpengine.netdna-ssl.com/wp-content/uploads/2020/11/canvass.pdf
 # data/results-unofficial/lasalle.csv:
@@ -580,11 +607,11 @@ data/results-unofficial/lee.csv: input/results-unofficial/lee-constitution.csv i
 	pipenv run python scripts/process_lee_results.py > $@
 
 input/results-unofficial/lee-constitution.csv: input/results-unofficial/lee.pdf
-	java -jar scripts/tabula.jar -c %23,27.5,32,37,43,48,54,60,72,76,81,87 -a %27,0,100,100 -p 1 $< | \
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,72,76,81,87 -a %27,0,100,100 -p 1 $< | \
 	xsv select --no-headers 1-3,7,10,12 > $@
 
 input/results-unofficial/lee-president.csv: input/results-unofficial/lee.pdf
-	java -jar scripts/tabula.jar -c %23,27.5,32,37,43,48,54,60,65,70,75,82 -a %27,0,100,100 -p 2 $< | \
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,65,70,75,82 -a %27,0,100,100 -p 2 $< | \
 	xsv select --no-headers 1,2,4,8,10,12 > $@
 
 input/results-unofficial/lee.pdf:
@@ -604,6 +631,9 @@ data/results-unofficial/marion.csv:
 data/results-unofficial/mercer.csv:
 	wget -qO - 'http://www.mercercountyil.org/Portals/MercerCounty/Public_Documents/Elections/2020/General%20Election/11-03-20%20Precinct%20Report%20-%20Unofficial%20Results.txt' | \
 	pipenv run python scripts/process_text_results.py mercer > $@
+
+input/results-unofficial/mchenry.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/McHenry/105201/271712/reports/detailxml.zip
 
 data/results-unofficial/monroe.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/12/pd/13651,13666,13668,13685,13669,13684,13683,13682,13681,13680,13679,13678,13677,13676,13675,13674,13673,13672,13671,13670,13650,13686,13667,13665,13664,13663,13662,13661,13660,13659,13658,13657,13656,13655,13654,13653,13652' | \
@@ -663,27 +693,33 @@ data/results-unofficial/tazewell.csv: input/results-unofficial/tazewell-constitu
 	pipenv run python scripts/process_tazewell_results.py > $@
 
 input/results-unofficial/tazewell-president.csv: input/results-unofficial/tazewell.pdf
-	java -jar scripts/tabula.jar -c %23,27.5,32,39.4,48.5,57,65,73.5 -a %25,0,100,100 -p 4-6 $< | \
+	java -jar bin/tabula.jar -c %23,27.5,32,39.4,48.5,57,65,73.5 -a %25,0,100,100 -p 4-6 $< | \
 	xsv slice -s 1 | \
 	xsv select 1-5 > $@
 
 input/results-unofficial/tazewell-constitution.csv: input/results-unofficial/tazewell.pdf
-	java -jar scripts/tabula.jar -c %23,27.5,32,36,40,44,48,52,57 -a %25,0,100,100 -p 1-3 $< | \
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,48,52,57 -a %25,0,100,100 -p 1-3 $< | \
 	xsv slice -s 1 | \
 	xsv select 1-3,6-7,9 > $@
 
 input/results-unofficial/tazewell.pdf:
-	wget -O $@ https://www.tazewell.com/countyclerk/images/Elections/Nov3-2020-Unofficial-of-Votes-Cast.pdf
+	wget -O $@ https://www.tazewell.com/countyclerk/images/Elections/2020-Nov-03-Official-of-Votes-Cast.pdf
 
 data/results-unofficial/union.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/16/pd/13706,13705,13688,13689,13690,13691,13692,13693,13694,13695,13696,13697,13698,13699,13700,13701,13702,13703,13704,13687' | \
 	pipenv run python scripts/process_platinum_results.py union | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
+input/results-unofficial/vermilion.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Vermilion/107170/271697/reports/detailxml.zip
+
 data/results-unofficial/wayne.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/14/pd/13534,13520,13509,13510,13525,13526,13527,13528,13529,13530,13531,13532,13508,13511,13512,13513,13514,13515,13516,13517,13518,13519,13521,13533,13522,13523,13524' | \
 	pipenv run python scripts/process_platinum_results.py wayne | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
+
+input/results-unofficial/will.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Will/106272/267921/reports/detailxml.zip
 
 data/results-unofficial/williamson.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/51/pd/13455,13422,13420,13419,13418,13417,13416,13415,13414,13413,13412,13411,13410,13409,13408,13407,13406,13405,13404,13403,13402,13401,13400,13399,13398,13397,13396,13395,13394,13393,13392,13421,13423,13454,13424,13453,13452,13451,13450,13449,13448,13447,13446,13445,13444,13443,13442,13441,13440,13439,13438,13437,13436,13435,13434,13433,13432,13431,13430,13429,13428,13427,13426,13425,13391' | \
@@ -692,6 +728,12 @@ data/results-unofficial/williamson.csv:
 
 data/results-unofficial/winnebago.csv: input/results-unofficial/winnebago.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py winnebago upper > $@
+
+input/results-unofficial/winnebago.zip:
+	wget -O $@ https://results.enr.clarityelections.com/WRC/Winnebago/107127/268257/reports/detailxml.zip
+
+input/results-unofficial/city-of-bloomington.zip:
+	wget -O $@ https://results.enr.clarityelections.com//IL/Bloomington/107152/271705/reports/detailxml.zip
 
 data/results-unofficial/city-of-chicago.csv:
 	pipenv run python scripts/scrape_chicago_results.py > $@
@@ -708,33 +750,8 @@ input/results-unofficial/city-of-east-st-louis-results.csv:
 	'https://stclair.platinumelectionresults.com/reports/township/48/pd/11551,11537,11544,11545,11546,11547,11548,11549,11527,11538,11528,11529,11530,11531,11532,11533,11534,11535,11536,11539,11550,11540,11541,11542,11543' | \
 	pipenv run python scripts/process_platinum_results.py city-of-east-st-louis > $@
 
-data/results-unofficial/%.csv: input/results-unofficial/%.zip
-	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@
-
-input/results-unofficial/dupage.zip:
-	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
-
-input/results-unofficial/kankakee.zip:
-	wget -O $@ https://results.enr.clarityelections.com//IL/Kankakee/106271/267759/reports/detailxml.zip
-
-# TODO: More precincts than results rows for Lake
-input/results-unofficial/lake.zip:
-	wget -O $@ https://results.enr.clarityelections.com//IL/Lake/105841/270844/reports/detailxml.zip
-
-input/results-unofficial/mchenry.zip:
-	wget -O $@ https://results.enr.clarityelections.com//IL/McHenry/105201/271712/reports/detailxml.zip
-
-input/results-unofficial/vermilion.zip:
-	wget -O $@ https://results.enr.clarityelections.com//IL/Vermilion/107170/271697/reports/detailxml.zip
-
-input/results-unofficial/will.zip:
-	wget -O $@ https://results.enr.clarityelections.com//IL/Will/106272/267921/reports/detailxml.zip
-
-input/results-unofficial/winnebago.zip:
-	wget -O $@ https://results.enr.clarityelections.com/WRC/Winnebago/107127/268257/reports/detailxml.zip
-
-input/results-unofficial/city-of-bloomington.zip:
-	wget -O $@ https://results.enr.clarityelections.com//IL/Bloomington/107152/271705/reports/detailxml.zip
-
 input/results-unofficial/city-of-rockford.zip:
 	wget -O $@ https://results.enr.clarityelections.com/WRC/Rockford/107126/271677/reports/detailxml.zip
+
+data/results-unofficial/%.csv: input/results-unofficial/%.zip
+	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py $* > $@

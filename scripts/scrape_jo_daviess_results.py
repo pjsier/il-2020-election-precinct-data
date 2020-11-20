@@ -20,9 +20,10 @@ COLUMNS = [
     "il-constitution-no",
     "il-constitution-votes",
 ]
+
 if __name__ == "__main__":
     president_res = requests.get(
-        "https://www.jodaviess.org/vertical/sites/%7B7C77C92D-D4A3-4866-8D3D-FE560FE5CFC8%7D/uploads/COPY_1_President_Vice_President-alternate.htm"  # noq
+        "https://www.jodaviess.org/vertical/sites/%7B7C77C92D-D4A3-4866-8D3D-FE560FE5CFC8%7D/uploads/COPY_1_President_Vice_President-alternate.htm"  # noqa
     )
     constitution_res = requests.get(
         "https://www.jodaviess.org/vertical/sites/%7B7C77C92D-D4A3-4866-8D3D-FE560FE5CFC8%7D/uploads/COPY_Constitutional_Amendment-alternate.htm"  # noqa
