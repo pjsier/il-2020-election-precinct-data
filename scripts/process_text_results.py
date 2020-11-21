@@ -63,6 +63,8 @@ if __name__ == "__main__":
             if precinct_parts[-1].isdigit():
                 precinct_num = precinct_parts[-1]
                 place = " ".join(precinct_parts[:-1]).strip()
+        if authority == "ogle" and not re.search(r"\d", precinct):
+            precinct = f"{precinct} 1"
 
         if "PRESIDENT ONLY" in precinct:
             continue
@@ -95,6 +97,7 @@ if __name__ == "__main__":
                     for p in [
                         "PRESIDENT AND",
                         "PRESIDENT and",
+                        "PRESIDENT / ",
                         "CONSTITUTION",
                         "INCOME TAX",
                     ]
@@ -117,8 +120,8 @@ if __name__ == "__main__":
                     )
                     president_votes += precinct_dict["us-president-rep"]
                 # Get other results for president section
-                # ignore "Under Votes", "Over Votes"
-                elif "PRESIDENT AND" in contest_name and "Votes" not in line:
+                # ignore "Vote for", "Under Votes", "Over Votes"
+                elif "PRESIDENT" in contest_name and "Vote" not in line:
                     votes_match = re.search(r"[\d,]+", line)
                     if votes_match:
                         president_votes += int(votes_match.group().replace(",", ""))
@@ -132,15 +135,6 @@ if __name__ == "__main__":
                         re.search(r"[\d,]+", line).group().replace(",", "")
                     )
                     constitution_votes += precinct_dict["il-constitution-no"]
-                elif "Under Votes" in line:
-                    # TODO: Also check "Total" instead?
-                    votes = precinct_dict["ballots"] - int(
-                        re.search(r"[\d,]+", line).group().replace(",", "")
-                    )
-                    if "PRESIDENT" in contest_name:
-                        precinct_dict["us-president-votes"] = votes
-                    elif "CONSTITUTION" in contest_name:
-                        precinct_dict["il-constitution-votes"] = votes
             if (
                 "il-constitution-yes" in precinct_dict
                 and "il-constitution-votes" not in precinct_dict

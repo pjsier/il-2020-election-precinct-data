@@ -22,6 +22,13 @@ if __name__ == "__main__":
 
     results = []
     for row in rows:
+        if "PRESIDENTIAL" in row[0]:
+            continue
+        precinct = row[0]
+        if precinct == "LE ROY":
+            precinct = "LEROY 1"
+        elif precinct in ["MANCHESTER", "SPRING"]:
+            precinct = f"{precinct} 1"
         r = []
         for v in row:
             if v.isdigit():
@@ -36,15 +43,15 @@ if __name__ == "__main__":
                 "authority": "boone",
                 "place": "",
                 "ward": "",
-                "precinct": row[0],
+                "precinct": precinct,
                 "registered": r[2],
-                "ballots": r[3] + r[9] + r[15] + r[21],
-                "us-president-dem": r[30] + r[35] + r[40] + r[45],
-                "us-president-rep": r[29] + r[34] + r[39] + r[44],
-                "us-president-votes": r[28] + r[33] + r[38] + r[43],
-                "il-constitution-yes": r[5] + r[11] + r[17] + r[23],
-                "il-constitution-no": r[6] + r[12] + r[18] + r[24],
-                "il-constitution-votes": r[4] + r[10] + r[16] + r[22],
+                "ballots": r[3] + r[14] + r[25] + r[36],
+                "us-president-dem": r[51] + r[58] + r[65] + r[72],
+                "us-president-rep": r[49] + r[56] + r[63] + r[70],
+                "us-president-votes": r[48] + r[55] + r[62] + r[69],
+                "il-constitution-yes": r[8] + r[19] + r[30] + r[41],
+                "il-constitution-no": r[10] + r[21] + r[32] + r[43],
+                "il-constitution-votes": r[7] + r[18] + r[29] + r[40],
             }
         )
 

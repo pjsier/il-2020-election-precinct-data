@@ -4,7 +4,7 @@ all: $(PRECINCT_FILES)
 
 .PHONY: clean
 clean:
-	rm -f data/precincts/*.geojson data/results-unofficial/*.csv input/precincts/*.* input/results-unofficial/*.*
+	rm -f output/*.geojson data/precincts/*.geojson data/results-unofficial/*.csv input/precincts/*.* input/results-unofficial/*.*
 
 .PHONY: install
 install:
@@ -25,7 +25,11 @@ data/precincts/bond.geojson: input/precincts/il_2016.geojson
 
 data/precincts/boone.geojson:
 	pipenv run esri2geojson https://maps.boonecountyil.org/arcgis/rest/services/Clerk_and_Recorder/Voting_Polling_Places/MapServer/1 - | \
-	mapshaper -i - -rename-fields precinct_num=Precinct -rename-fields precinct=TWP_PRECIN -o $@
+	mapshaper -i - \
+	-rename-fields precinct_num=Precinct \
+	-each 'precinct = TWP_PRECIN.toUpperCase()' \
+	-dissolve2 precinct \
+	-o $@
 
 data/precincts/brown.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
@@ -276,6 +280,7 @@ data/precincts/mchenry.geojson:
 	-each 'precinct = precinct.replace("ALDEN", "ALDEN 1").replace("DUNHAM", "DUNHAM 1").replace("RILEY", "RILEY 1")' \
 	-o $@
 
+# TODO: Broken for now
 data/precincts/mclean.geojson: input/precincts/mclean.geojson
 	mapshaper -i $< -filter '!NAME.includes("City of Bloomington")' -o $@
 
@@ -328,10 +333,11 @@ data/precincts/ogle.geojson:
 	mapshaper -i - \
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
 	-dissolve2 precinct \
+	-each 'precinct = precinct.toUpperCase().replace(".", "")' \
 	-o $@
 
 data/precincts/peoria.geojson:
-	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/1 - | \
+	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/arcgis/rest/services/Voting_Precincts/FeatureServer/0 - | \
 	mapshaper -i - -rename-fields precinct=PRECINCTID -o $@
 
 data/precincts/perry.geojson: input/precincts/il_2016.geojson
@@ -368,7 +374,8 @@ data/precincts/saline.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "165"' -o $@
 
 data/precincts/sangamon.geojson:
-	pipenv run esri2geojson https://services.arcgis.com/XqG0RpqsNfIBGGb2/ArcGIS/rest/services/ElectionPollingAndPrecincts/FeatureServer/1 $@
+	pipenv run esri2geojson https://services.arcgis.com/XqG0RpqsNfIBGGb2/ArcGIS/rest/services/ElectionPollingAndPrecincts/FeatureServer/1 - | \
+	mapshaper -i - -rename-fields precinct=NAME -o $@
 
 data/precincts/schuyler.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "169"' -o $@
@@ -518,15 +525,11 @@ data/results-unofficial/boone.csv: input/results-unofficial/boone-constitution.c
 	pipenv run python scripts/process_boone_results.py > $@
 
 input/results-unofficial/boone-constitution.csv: input/results-unofficial/boone.pdf
-	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,48,53,57,61 -a %25,0,100,100 -p 1-7 $< | \
-	xsv slice --no-headers -s 2 | \
-	xsv select 1-3,7-8,10 | \
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,48,53,57,61 -a %25,0,100,100 -p 1-6 $< | \
 	pipenv run python scripts/process_flatten_precinct_csv.py > $@
 
 input/results-unofficial/boone-president.csv: input/results-unofficial/boone.pdf
-	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44 -a %25,0,100,100 -p 8-11 $< | \
-	xsv slice --no-headers -s 2 | \
-	xsv select 1-4,6 | \
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44 -a %25,0,100,100 -p 8-13 $< | \
 	pipenv run python scripts/process_flatten_precinct_csv.py > $@
 
 input/results-unofficial/boone.pdf:
@@ -544,7 +547,7 @@ input/results-unofficial/brown-results.csv:
 	pipenv run python scripts/process_platinum_results.py brown > $@
 
 data/results-unofficial/calhoun.csv:
-	wget -qO - 'https://platinumelectionresults.com/reports/township/57/pd/12398,12397,12396,12395,12394,12393,12392' | \
+	wget -qO - 'https://platinumelectionresults.com/reports/township/57/pd/13957,13956,13955,13954,13953,13952,13951' | \
 	pipenv run python scripts/process_platinum_results.py calhoun | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
@@ -599,12 +602,12 @@ input/results-unofficial/dupage.zip:
 	wget -O $@ 'https://www.dupageresults.com//IL/DuPage/106122/270950/reports/detailxml.zip'
 
 data/results-unofficial/fayette.csv:
-	wget -qO - 'https://platinumelectionresults.com/reports/township/15/pd/13856,13855,13830,13831,13832,13833,13834,13835,13836,13837,13838,13839,13840,13841,13842,13843,13844,13845,13846,13847,13848,13849,13850,13851,13852,13853,13854,13829' | \
+	wget -qO - 'https://platinumelectionresults.com/reports/township/15/pd/13884,13883,13858,13859,13860,13861,13862,13863,13864,13865,13866,13867,13868,13869,13870,13871,13872,13873,13874,13875,13876,13877,13878,13879,13880,13881,13882,13857' | \
 	pipenv run python scripts/process_platinum_results.py fayette | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
 data/results-unofficial/franklin.csv:
-	wget -qO - 'https://platinumelectionresults.com/reports/township/21/pd/12784,12790,12800,12808,12801,12815,12814,12813,12812,12811,12810,12817,12799,12797,12796,12795,12794,12793,12792,12798,12791,12789,12788,12787,12786,12785,12816,12809,12807,12806,12805,12804,12803,12802,12783' | \
+	wget -qO - 'https://platinumelectionresults.com/reports/township/21/pd/13917,13923,13933,13941,13934,13948,13947,13946,13945,13944,13943,13950,13932,13930,13929,13928,13927,13926,13925,13931,13924,13922,13921,13920,13919,13918,13949,13942,13940,13939,13938,13937,13936,13935,13916' | \
 	pipenv run python scripts/process_platinum_results.py franklin | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
@@ -714,20 +717,30 @@ data/results-unofficial/montgomery.csv:
 	wget -qO - 'https://montgomeryco.com/countyclerk/EL30.HTM' | \
 	pipenv run python scripts/process_text_results.py montgomery > $@
 
-data/results-unofficial/peoria.csv: input/results-unofficial/peoria-turnout.csv input/results-unofficial/peoria-president.csv
-	xsv join precinct $< precinct $(filter-out $<,$^) > $@
+data/results-unofficial/ogle.csv:
+	pipenv run python scripts/scrape_ogle_results.py | \
+	pipenv run python scripts/process_text_results.py ogle > $@
 
-input/results-unofficial/peoria-turnout.csv:
-	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/1 - | \
-	mapshaper -i - -rename-fields precinct=PRECINCTID,registered=REGVOTERS,ballots=TOTBALLOTS -filter-fields precinct,registered,ballots -o $@
+# data/results-unofficial/peoria.csv: input/results-unofficial/peoria-turnout.csv input/results-unofficial/peoria-president.csv
+# 	xsv join precinct $< precinct $(filter-out $<,$^) > $@
 
-input/results-unofficial/peoria-president.csv:
-	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/3 - | \
-	mapshaper -i - -rename-fields precinct=PRECINCTID,totalvotes=Total_candidate_Votes -filter-fields precinct,CANDIDATE,PARTY,NUMVOTES,totalvotes -o format=csv - | \
-	pipenv run python scripts/process_peoria_results.py > $@
+# input/results-unofficial/peoria-turnout.csv:
+# 	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/1 - | \
+# 	mapshaper -i - -rename-fields precinct=PRECINCTID,registered=REGVOTERS,ballots=TOTBALLOTS -filter-fields precinct,registered,ballots -o $@
+
+# input/results-unofficial/peoria-president.csv:
+# 	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/3 - | \
+# 	mapshaper -i - -rename-fields precinct=PRECINCTID,totalvotes=Total_candidate_Votes -filter-fields precinct,CANDIDATE,PARTY,NUMVOTES,totalvotes -o format=csv - | \
+# 	pipenv run python scripts/process_peoria_results.py > $@
+
+# input/results-unofficial/peoria.pdf:
+# 	wget -O $@ https://peoriaelections.org/DocumentCenter/View/502/official-precinct
+
+# input/results-unofficial/peoria-turnout.pdf:
+# 	wget -O $@ https://peoriaelections.org/DocumentCenter/View/503/official-precinct_turnout
 
 data/results-unofficial/pike.csv:
-	wget -qO - 'https://platinumelectionresults.com/reports/township/103/pd/12193,12177,12164,12165,12166,12167,12168,12169,12170,12171,12172,12173,12174,12175,12176,12178,12192,12179,12180,12181,12182,12183,12184,12185,12186,12187,12188,12189,12190,12191,12163' | \
+	wget -qO - 'https://platinumelectionresults.com/reports/township/103/pd/13915,13899,13886,13887,13888,13889,13890,13891,13892,13893,13894,13895,13896,13897,13898,13900,13914,13901,13902,13903,13904,13905,13906,13907,13908,13909,13910,13911,13912,13913,13885' | \
 	pipenv run python scripts/process_platinum_results.py pike | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
@@ -773,8 +786,8 @@ input/results-unofficial/rock-island-president-2.csv: input/results-unofficial/r
 input/results-unofficial/rock-island.pdf:
 	wget -O $@ 'https://www.rockislandcounty.org/uploadedFiles/CountyClerk/Elections/ElectionResults/Official%20Election%20Results%20Pct%20by%20Pct%2011%203%202020.pdf'
 
-# https://results.enr.clarityelections.com//IL/Sangamon/106268/271709/json/en/summary.json
-# https://results.enr.clarityelections.com//IL/Sangamon/106268/271709/json/ALL.json
+data/results-unofficial/sangamon.csv:
+	pipenv run python scripts/scrape_sangamon_results.py > $@
 
 data/results-unofficial/st-clair.csv: input/results-unofficial/st-clair-results.csv input/results-unofficial/st-clair-registered.csv
 	xsv join precinct $< precinct $(filter-out $<,$^) | \
@@ -784,7 +797,7 @@ input/results-unofficial/st-clair-registered.csv:
 	pipenv run python scripts/scrape_platinum_registered.py https://stclair.platinumelectionresults.com/turnouts/precincts/6 > $@
 
 input/results-unofficial/st-clair-results.csv:
-	wget -qO - 'https://stclair.platinumelectionresults.com/reports/township/6/pd/12275,12277,12302,12278,12301,12300,12299,12298,12297,12296,12295,12294,12293,12292,12291,12290,12289,12288,12287,12286,12285,12284,12283,12282,12281,12280,12279,12251,12276,12250,12222,12220,12219,12218,12217,12320,12319,12318,12317,12316,12315,12314,12313,12312,12377,12376,12375,12374,12373,12372,12371,12370,12369,12368,12367,12366,12365,12364,12363,12362,12361,12360,12383,12385,12410,12386,12409,12408,12407,12406,12395,12394,12393,12392,12391,12390,12389,12388,12387,12359,12384,12358,12330,12328,12327,12326,12325,12324,12323,12322,12321,12331,12356,12332,12353,12352,12351,12212,12211,12210,12348,12355,12354,12216,12215,12214,12213,12343,12342,12341,12340,12336,12350,12349,12204,12203,12202,12201,12200,12199,12198,12221,12223,12248,12224,12247,12246,12245,12244,12243,12242,12335,12347,12333,12241,12240,12239,12238,12237,12236,12235,12234,12233,12232,12231,12230,12229,12228,12227,12226,12225,12249,12304,12357,12305,12382,12381,12380,12379,12378,12339,12338,12337,12334,12197,12209,12208,12207,12206,12205,12346,12345,12344,12329,12405,12404,12403,12402,12401,12400,12399,12398,12397,12396,12311,12310,12309,12308,12307,12306' | \
+	wget -qO - 'https://stclair.platinumelectionresults.com/reports/township/6/pd/12601,12553,12479,12478,12477,12476,12475,12474,12473,12472,12471,12480,12470,12468,12467,12466,12465,12464,12463,12462,12461,12460,12469,12482,12493,12483,12503,12502,12501,12500,12499,12498,12497,12496,12495,12525,12524,12523,12522,12521,12520,12519,12528,12518,12438,12437,12436,12481,12505,12506,12507,12575,12574,12573,12572,12571,12570,12569,12568,12567,12576,12566,12564,12563,12562,12561,12560,12559,12558,12557,12594,12593,12592,12591,12600,12590,12588,12587,12586,12585,12584,12583,12582,12581,12580,12555,12577,12554,12529,12527,12526,12509,12508,12517,12531,12551,12550,12490,12489,12488,12547,12530,12541,12504,12494,12492,12491,12552,12542,12540,12539,12535,12549,12548,12458,12457,12445,12431,12430,12429,12428,12427,12426,12425,12424,12423,12422,12421,12420,12419,12418,12534,12546,12532,12417,12416,12415,12414,12413,12432,12433,12434,12435,12455,12454,12453,12452,12451,12450,12449,12448,12447,12456,12446,12444,12443,12442,12441,12440,12439,12538,12537,12536,12533,12412,12487,12486,12485,12484,12459,12545,12544,12543,12510,12556,12565,12578,12589,12579,12599,12598,12597,12596,12595,12516,12515,12514,12513,12512,12511' | \
 	pipenv run python scripts/process_platinum_results.py st-clair > $@
 
 data/results-unofficial/tazewell.csv: input/results-unofficial/tazewell-constitution.csv input/results-unofficial/tazewell-president.csv
@@ -845,8 +858,7 @@ input/results-unofficial/city-of-east-st-louis-registered.csv:
 	pipenv run python scripts/scrape_platinum_registered.py https://stclair.platinumelectionresults.com/turnouts/precincts/48 > $@
 
 input/results-unofficial/city-of-east-st-louis-results.csv:
-	wget -qO - \
-	'https://stclair.platinumelectionresults.com/reports/township/48/pd/11551,11537,11544,11545,11546,11547,11548,11549,11527,11538,11528,11529,11530,11531,11532,11533,11534,11535,11536,11539,11550,11540,11541,11542,11543' | \
+	wget -qO - 'https://stclair.platinumelectionresults.com/reports/township/48/pd/11551,11537,11544,11545,11546,11547,11548,11549,11527,11538,11528,11529,11530,11531,11532,11533,11534,11535,11536,11539,11550,11540,11541,11542,11543' | \
 	pipenv run python scripts/process_platinum_results.py city-of-east-st-louis > $@
 
 input/results-unofficial/city-of-rockford.zip:
