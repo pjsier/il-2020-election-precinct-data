@@ -27,17 +27,29 @@ if __name__ == "__main__":
     for row in rows[1:]:
         if row[0] in ["PRESIDENTIAL BALLOT", "Total"]:
             continue
-        precinct_split = row[0].split()
-        if len(precinct_split) == 1 or not re.search(r"\d", row[0]):
-            precinct = f"{row[0]} 01"
-        else:
-            *precinct_name_split, precinct_num = precinct_split
-            precinct_name = " ".join(precinct_name_split)
-            if authority == "tazewell":
-                precict_name = precinct_name.replace("LT M", "LITTLE M")
-            if authority == "christian":
-                pass
-            precinct = f"{precinct_name} {precinct_num.zfill(2)}"
+        precinct = row[0].strip()
+        if authority == "tazewell":
+            precinct_split = precinct.split()
+            if len(precinct_split) == 1 or not re.search(r"\d", row[0]):
+                precinct = f"{row[0]} 01"
+            else:
+                *precinct_name_split, precinct_num = precinct_split
+                precinct_name = " ".join(precinct_name_split)
+                precinct_name = precinct_name.replace("LT M", "LITTLE M")
+                precinct = f"{precinct_name} {precinct_num.zfill(2)}"
+        elif authority == "christian":
+            precinct = precinct.replace("#", "").replace(" 0", " ")
+            if precinct in [
+                "ASSUMPTION",
+                "BUCKHART",
+                "MT AUBURN",
+                "RICKS",
+                "STONINGTON",
+            ]:
+                precinct = f"{precinct} 1"
+        elif authority == "macoupin":
+            if precinct == "HILYARD":
+                precinct = "HILLYARD"
         results.append(
             {
                 "id": "",

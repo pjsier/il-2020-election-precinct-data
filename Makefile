@@ -240,7 +240,8 @@ data/precincts/macon.geojson:
 	pipenv run esri2geojson https://services1.arcgis.com/a3k0qIja5SolIRYR/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 $@
 
 data/precincts/macoupin.geojson:
-	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/MacoupinIL/MacoupinIL_PAT_GIS/MapServer/4 $@
+	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/MacoupinIL/MacoupinIL_PAT_GIS/MapServer/4 - | \
+	mapshaper -i - -rename-fields precinct=PRECINCT -o $@
 
 data/precincts/madison.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/Z0kKj2K728ngqqrp/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 - | \
@@ -633,6 +634,23 @@ input/results-unofficial/lee-president.csv: input/results-unofficial/lee.pdf
 
 input/results-unofficial/lee.pdf:
 	wget -O $@ https://www.leecountyil.com/DocumentCenter/View/1457/11032020Final-Official-Results
+
+data/results-unofficial/macoupin.csv: input/results-unofficial/macoupin-constitution.csv input/results-unofficial/macoupin-president.csv
+	xsv join 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_sovc_wide_results.py macoupin > $@
+
+input/results-unofficial/macoupin-president.csv: input/results-unofficial/macoupin.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,36,39.4,44,48.5,57,65,73.5 -a %25,0,100,100 -p 3-4 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-4,6 > $@
+
+input/results-unofficial/macoupin-constitution.csv: input/results-unofficial/macoupin.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,50,53,58,61 -a %25,0,100,100 -p 1-2 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-3,7-8,10 > $@
+
+input/results-unofficial/macoupin.pdf:
+	wget -O $@ https://www.macoupinvotes.com/wp-content/uploads/2020/11/2020_nov_03_il_macoupin_SOVC.pdf
 
 data/results-unofficial/madison.csv: input/results-unofficial/madison.json
 	cat $< | pipenv run python scripts/process_madison.py > $@
