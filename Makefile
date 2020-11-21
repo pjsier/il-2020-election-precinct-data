@@ -264,7 +264,10 @@ data/precincts/massac.geojson: input/precincts/il_2016.geojson
 
 data/precincts/mcdonough.geojson:
 	pipenv run python scripts/scrape_mcdonough.py | \
-	mapshaper -i - -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 -o $@
+	mapshaper -i - \
+	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
+	-each 'precinct = Name.toUpperCase().replace("MACOMB", "MACOMB TWP").replace("MC ", "MACOMB CITY ")' \
+	-o $@
 
 data/precincts/mchenry.geojson:
 	pipenv run esri2geojson https://www.mchenrycountygis.org/arcgis/rest/services/County_Board/Precincts/MapServer/0 - | \
@@ -574,6 +577,21 @@ data/results-unofficial/clinton.csv:
 data/results-unofficial/cook.csv:
 	pipenv run python scripts/scrape_cook_results.py > $@
 
+data/results-unofficial/crawford.csv: input/results-unofficial/crawford-constitution.csv input/results-unofficial/crawford-president.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_sovc_tall_results.py crawford > $@
+
+input/results-unofficial/crawford-constitution.csv: input/results-unofficial/crawford.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,64,69 -a %27,0,100,100 -p 1 $< | \
+	xsv select --no-headers 1-3,7-8,10 > $@
+
+input/results-unofficial/crawford-president.csv: input/results-unofficial/crawford.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,64,69 -a %27,0,100,100 -p 2 $< | \
+	xsv select --no-headers 1,4-5,7 > $@
+
+input/results-unofficial/crawford.pdf:
+	wget -O $@ https://crawfordcountyil.org/wp-content/uploads/2020/11/statement-1.pdf
+
 data/results-unofficial/dekalb.csv:
 	pipenv run python scripts/scrape_election_console_results.py dekalb 'http://dekalb.il.electionconsole.com/electionsummary.php?e=2020%20General' > $@
 
@@ -667,6 +685,21 @@ data/results-unofficial/mercer.csv:
 	wget -qO - 'http://www.mercercountyil.org/Portals/MercerCounty/Public_Documents/Elections/2020/General%20Election/11-03-20%20Precinct%20Report%20-%20Unofficial%20Results.txt' | \
 	pipenv run python scripts/process_text_results.py mercer > $@
 
+data/results-unofficial/mcdonough.csv: input/results-unofficial/mcdonough-constitution.csv input/results-unofficial/mcdonough-president.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_sovc_tall_results.py mcdonough > $@
+
+input/results-unofficial/mcdonough-constitution.csv: input/results-unofficial/mcdonough.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,64,69 -a %25,0,100,100 -p 1 $< | \
+	xsv select --no-headers 1-3,7-8,10 > $@
+
+input/results-unofficial/mcdonough-president.csv: input/results-unofficial/mcdonough.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,64,69 -a %25,0,100,100 -p 2 $< | \
+	xsv select --no-headers 1,4-5,7 > $@
+
+input/results-unofficial/mcdonough.pdf:
+	wget -O $@ https://www.mcdonoughelections.com/results-2.pdf
+
 input/results-unofficial/mchenry.zip:
 	wget -O $@ https://results.enr.clarityelections.com//IL/McHenry/105201/271712/reports/detailxml.zip
 
@@ -708,6 +741,37 @@ data/results-unofficial/randolph.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/13/pd/13809,13807,13806,13805,13804,13803,13802,13801,13800,13799,13798,13797,13796,13795,13794,13793,13808,13810,13827,13811,13826,13825,13824,13823,13822,13821,13820,13819,13818,13817,13816,13815,13814,13813,13812,13792,13828' | \
 	pipenv run python scripts/process_platinum_results.py randolph | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
+
+data/results-unofficial/rock-island.csv: input/results-unofficial/rock-island.csv input/results-unofficial/rock-island-president.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_rock_island_results.py > $@
+
+input/results-unofficial/rock-island.csv: input/results-unofficial/rock-island-turnout.csv input/results-unofficial/rock-island-constitution.csv	
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	xsv select --no-headers 1-3,5-6 > $@
+
+input/results-unofficial/rock-island-turnout.csv: input/results-unofficial/rock-island.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32 -a %22,0,100,100 -p 1-2 $< | \
+	xsv select --no-headers 1-3 > $@
+
+input/results-unofficial/rock-island-constitution.csv: input/results-unofficial/rock-island.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,64,69 -a %22,0,100,100 -p 3-4 $< | \
+	xsv select --no-headers 1,7,9 > $@
+
+input/results-unofficial/rock-island-president.csv: input/results-unofficial/rock-island-president-1.csv input/results-unofficial/rock-island-president-2.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	xsv select --no-headers 1-5,7-8 > $@
+
+input/results-unofficial/rock-island-president-1.csv: input/results-unofficial/rock-island.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37,43,48,54,60,64,69,75,80,86 -a %22,0,100,100 -p 5-6 $< | \
+	xsv select --no-headers 1,7,9,11,13 > $@
+
+input/results-unofficial/rock-island-president-2.csv: input/results-unofficial/rock-island.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,37 -a %22,0,100,100 -p 7-8 $< | \
+	xsv select --no-headers 1-2,4 > $@
+
+input/results-unofficial/rock-island.pdf:
+	wget -O $@ 'https://www.rockislandcounty.org/uploadedFiles/CountyClerk/Elections/ElectionResults/Official%20Election%20Results%20Pct%20by%20Pct%2011%203%202020.pdf'
 
 # https://results.enr.clarityelections.com//IL/Sangamon/106268/271709/json/en/summary.json
 # https://results.enr.clarityelections.com//IL/Sangamon/106268/271709/json/ALL.json
