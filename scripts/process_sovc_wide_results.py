@@ -19,6 +19,8 @@ COLUMNS = [
 ]
 
 if __name__ == "__main__":
+    authority = sys.argv[1]
+
     rows = [r for r in csv.reader(sys.stdin)]
     results = []
 
@@ -30,12 +32,16 @@ if __name__ == "__main__":
             precinct = f"{row[0]} 01"
         else:
             *precinct_name_split, precinct_num = precinct_split
-            precinct_name = " ".join(precinct_name_split).replace("LT M", "LITTLE M")
+            precinct_name = " ".join(precinct_name_split)
+            if authority == "tazewell":
+                precict_name = precinct_name.replace("LT M", "LITTLE M")
+            if authority == "christian":
+                pass
             precinct = f"{precinct_name} {precinct_num.zfill(2)}"
         results.append(
             {
                 "id": "",
-                "authority": "tazewell",
+                "authority": authority,
                 "place": "",
                 "ward": "",
                 "precinct": precinct,

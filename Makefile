@@ -548,6 +548,23 @@ data/results-unofficial/champaign.csv:
 	wget -qO - https://ccco-results.s3.us-east-2.amazonaws.com/2020/docs/march/11_03_2020_precinct.HTM | \
 	pipenv run python scripts/process_text_results.py champaign > $@
 
+data/results-unofficial/christian.csv: input/results-unofficial/christian-constitution.csv input/results-unofficial/christian-president.csv
+	xsv join 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_sovc_wide_results.py christian > $@
+
+input/results-unofficial/christian-president.csv: input/results-unofficial/christian.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,36,39.4,44,48.5,57,65,73.5 -a %25,0,100,100 -p 2 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-3,6,4 > $@
+
+input/results-unofficial/christian-constitution.csv: input/results-unofficial/christian.pdf
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,50,53,58,61 -a %25,0,100,100 -p 1 $< | \
+	xsv slice -s 1 | \
+	xsv select 1-3,7-8,10 > $@
+
+input/results-unofficial/christian.pdf:
+	wget -O $@ https://christiancountyil.com/wp-content/uploads/2020-nov-3-il-christian-SOVC.pdf
+
 data/results-unofficial/clinton.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/10/pd/13621,13601,13599,13598,13597,13596,13595,13594,13593,13600,13592,13590,13589,13588,13616,13615,13614,13613,13620,13612,13610,13609,13608,13607,13606,13605,13604,13583,13587,13586,13585,13584,13591,13602,13611,13603,13619,13618,13617' | \
 	pipenv run python scripts/process_platinum_results.py clinton | \
@@ -690,17 +707,17 @@ input/results-unofficial/st-clair-results.csv:
 
 data/results-unofficial/tazewell.csv: input/results-unofficial/tazewell-constitution.csv input/results-unofficial/tazewell-president.csv
 	xsv join 1 $< 1 $(filter-out $<,$^) | \
-	pipenv run python scripts/process_tazewell_results.py > $@
+	pipenv run python scripts/process_sovc_wide_results.py tazewell > $@
 
 input/results-unofficial/tazewell-president.csv: input/results-unofficial/tazewell.pdf
-	java -jar bin/tabula.jar -c %23,27.5,32,39.4,48.5,57,65,73.5 -a %25,0,100,100 -p 4-6 $< | \
+	java -jar bin/tabula.jar -c %23,27.5,32,36,39.4,44,48.5,57,65,73.5 -a %25,0,100,100 -p 4-6 $< | \
 	xsv slice -s 1 | \
-	xsv select 1-5 > $@
+	xsv select 1-4,6 > $@
 
 input/results-unofficial/tazewell-constitution.csv: input/results-unofficial/tazewell.pdf
-	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,48,52,57 -a %25,0,100,100 -p 1-3 $< | \
+	java -jar bin/tabula.jar -c %23,27.5,32,36,40,44,50,53,58,61 -a %25,0,100,100 -p 1-3 $< | \
 	xsv slice -s 1 | \
-	xsv select 1-3,6-7,9 > $@
+	xsv select 1-3,7-8,10 > $@
 
 input/results-unofficial/tazewell.pdf:
 	wget -O $@ https://www.tazewell.com/countyclerk/images/Elections/2020-Nov-03-Official-of-Votes-Cast.pdf
