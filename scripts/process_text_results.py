@@ -119,6 +119,16 @@ if __name__ == "__main__":
                         re.search(r"[\d,]+", line).group().replace(",", "")
                     )
                     president_votes += precinct_dict["us-president-rep"]
+                elif "Total" in line:
+                    votes_match = re.search(r"[\d,]+", line)
+                    if votes_match and "PRESIDENT" in contest_name:
+                        precinct_dict["us-president-votes"] = int(
+                            votes_match.group().replace(",", "")
+                        )
+                    elif votes_match and "CONSTITUTION" in contest_name:
+                        precinct_dict["il-constitution-votes"] = int(
+                            votes_match.group().replace(",", "")
+                        )
                 # Get other results for president section
                 # ignore "Vote for", "Under Votes", "Over Votes"
                 elif "PRESIDENT" in contest_name and "Vote" not in line:

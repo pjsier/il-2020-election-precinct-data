@@ -152,7 +152,8 @@ data/precincts/greene.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "061"' -o $@
 
 data/precincts/grundy.geojson:
-	pipenv run esri2geojson https://maps.grundyco.org/arcgis/rest/services/CountyClerk/PollingPlaces_SPIE_Public/FeatureServer/1 $@
+	pipenv run esri2geojson https://maps.grundyco.org/arcgis/rest/services/CountyClerk/PollingPlaces_SPIE_Public/FeatureServer/1 - | \
+	mapshaper -i - -each 'precinct = NAME.toUpperCase()' -o $@
 
 data/precincts/hamilton.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "065"' -o $@
@@ -222,7 +223,10 @@ data/precincts/lake.geojson:
 	mapshaper -i - -rename-fields precinct=Name -o $@
 
 data/precincts/lasalle.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "099"' -o $@
+	mapshaper -i $< \
+	-filter 'COUNTYFP === "099"' \
+	-each 'precinct = precinct.replace("LA SALLE", "LASALLE")' \
+	-o $@
 
 data/precincts/lawrence.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "101"' -o $@
@@ -280,12 +284,11 @@ data/precincts/mchenry.geojson:
 	-each 'precinct = precinct.replace("ALDEN", "ALDEN 1").replace("DUNHAM", "DUNHAM 1").replace("RILEY", "RILEY 1")' \
 	-o $@
 
-# TODO: Broken for now
 data/precincts/mclean.geojson: input/precincts/mclean.geojson
-	mapshaper -i $< -filter '!NAME.includes("City of Bloomington")' -o $@
+	mapshaper -i $< -filter '!precinct.includes("City of Bloomington")' -o $@
 
 input/precincts/mclean.geojson: input/precincts/Voting_Precincts.shp
-	mapshaper -i $< -o $@
+	mapshaper -i $< -rename-fields precinct=NAME -o $@
 
 input/precincts/Voting_Precincts.shp: input/precincts/mclean.zip
 	unzip -u $< -d $(dir $@)
@@ -397,7 +400,10 @@ input/precincts/st-clair.geojson:
 	pipenv run esri2geojson https://publicmap01.co.st-clair.il.us/arcgis/rest/services/SCC_voting_district/MapServer/7 $@
 
 data/precincts/stark.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "175"' -o $@
+	mapshaper -i $< \
+	-filter 'COUNTYFP === "175"' \
+	-each 'precinct = precinct.split(" ").slice(0, -1).join(" ")' \
+	-o $@
 
 data/precincts/stephenson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "177"' -o $@
@@ -466,7 +472,7 @@ data/precincts/woodford.geojson:
 
 data/precincts/city-of-bloomington.geojson: input/precincts/mclean.geojson
 	mapshaper -i $< \
-	-filter 'NAME.includes("City of Bloomington")' \
+	-filter 'precinct.includes("City of Bloomington")' \
 	-each 'precinct = "Precinct " + (+PRECINCTID).toString()' \
 	-o $@
 
@@ -551,6 +557,9 @@ data/results-unofficial/calhoun.csv:
 	pipenv run python scripts/process_platinum_results.py calhoun | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
+data/results-unofficial/carroll.csv: input/manual/carroll.csv
+	cp $< $@
+
 data/results-unofficial/champaign.csv:
 	wget -qO - https://ccco-results.s3.us-east-2.amazonaws.com/2020/docs/march/11_03_2020_precinct.HTM | \
 	pipenv run python scripts/process_text_results.py champaign > $@
@@ -606,15 +615,24 @@ data/results-unofficial/fayette.csv:
 	pipenv run python scripts/process_platinum_results.py fayette | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
+data/results-unofficial/ford.csv: input/manual/ford.csv
+	cp $< $@
+
 data/results-unofficial/franklin.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/21/pd/13917,13923,13933,13941,13934,13948,13947,13946,13945,13944,13943,13950,13932,13930,13929,13928,13927,13926,13925,13931,13924,13922,13921,13920,13919,13918,13949,13942,13940,13939,13938,13937,13936,13935,13916' | \
 	pipenv run python scripts/process_platinum_results.py franklin | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
 
+data/results-unofficial/grundy.csv: input/manual/grundy.csv
+	cp $< $@
+
 data/results-unofficial/henry.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/76/pd/13507,13506,13478,13477,13476,13475,13474,13473,13472,13471,13470,13469,13479,13468,13466,13465,13464,13463,13462,13461,13460,13459,13458,13457,13467,13480,13481,13482,13505,13504,13503,13502,13501,13500,13499,13498,13497,13496,13495,13494,13493,13492,13491,13490,13489,13488,13487,13486,13485,13484,13483,13456' | \
 	pipenv run python scripts/process_platinum_results.py henry | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
+
+data/results-unofficial/jefferson.csv: input/manual/jefferson.csv
+	cp $< $@
 
 data/results-unofficial/jersey.csv:
 	wget -qO - 'https://www.jerseycountyclerk-il.com/wp-content/2020-elections/20GILJER/el45a.HTM' | \
@@ -637,8 +655,33 @@ input/results-unofficial/kankakee.zip:
 input/results-unofficial/lake.zip:
 	wget -O $@ https://results.enr.clarityelections.com//IL/Lake/105841/270844/reports/detailxml.zip
 
-# TODO: https://15wb253pgifv3qzuu9h7yren-wpengine.netdna-ssl.com/wp-content/uploads/2020/11/canvass.pdf
-# data/results-unofficial/lasalle.csv:
+data/results-unofficial/lasalle.csv: input/results-unofficial/lasalle.csv input/results-unofficial/lasalle-president.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	pipenv run python scripts/process_lasalle_results.py > $@
+
+input/results-unofficial/lasalle.csv: input/results-unofficial/lasalle-turnout.csv input/results-unofficial/lasalle-constitution.csv
+	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
+	xsv select --no-headers 1-3,5-6 > $@
+
+input/results-unofficial/lasalle-turnout.csv: input/results-unofficial/lasalle.pdf
+	java -jar bin/tabula.jar -c %25,40,42,45 -p 1-4 $< | \
+	xsv search --no-headers '\.' | \
+	xsv search --no-headers '^\d{4}' | \
+	xsv select --no-headers 1-2,4 > $@
+
+input/results-unofficial/lasalle-constitution.csv: input/results-unofficial/lasalle.pdf
+	java -jar bin/tabula.jar -c %25,40 -p 4-7 $< | \
+	xsv search --no-headers --invert-match '[\.=-]' | \
+	xsv search --no-headers '^\d{4}' | \
+	xsv search --no-headers --invert-match '\d{6}' > $@
+
+input/results-unofficial/lasalle-president.csv: input/results-unofficial/lasalle.pdf
+	java -jar bin/tabula.jar -c %25,40,45,50,55,60,65 -p 7-10 $< | \
+	xsv search --no-headers '^\d{4}' | \
+	xsv search --no-headers --select 8 '\d' > $@
+
+input/results-unofficial/lasalle.pdf:
+	wget -O $@ https://15wb253pgifv3qzuu9h7yren-wpengine.netdna-ssl.com/wp-content/uploads/2020/11/2020-general-election.pdf
 
 # TODO: Add headers, details
 data/results-unofficial/lee.csv: input/results-unofficial/lee-constitution.csv input/results-unofficial/lee-president.csv
@@ -683,6 +726,9 @@ data/results-unofficial/marion.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/18/pd/13754,13753,13727,13726,13725,13724,13723,13722,13718,13716,13715,13714,13713,13712,13711,13710,13709,13708,13717,13729,13730,13731,13752,13751,13750,13749,13748,13747,13746,13745,13744,13743,13742,13741,13740,13739,13738,13737,13736,13735,13734,13733,13732,13707,13721,13720,13719,13728' | \
 	pipenv run python scripts/process_platinum_results.py marion | \
 	mapshaper -i - format=csv -each 'precinct = precinct.toUpperCase()' -o $@
+
+data/results-unofficial/mclean.csv: input/manual/mclean.csv
+	cp $< $@
 
 data/results-unofficial/mercer.csv:
 	wget -qO - 'http://www.mercercountyil.org/Portals/MercerCounty/Public_Documents/Elections/2020/General%20Election/11-03-20%20Precinct%20Report%20-%20Unofficial%20Results.txt' | \
@@ -799,6 +845,9 @@ input/results-unofficial/st-clair-registered.csv:
 input/results-unofficial/st-clair-results.csv:
 	wget -qO - 'https://stclair.platinumelectionresults.com/reports/township/6/pd/12601,12553,12479,12478,12477,12476,12475,12474,12473,12472,12471,12480,12470,12468,12467,12466,12465,12464,12463,12462,12461,12460,12469,12482,12493,12483,12503,12502,12501,12500,12499,12498,12497,12496,12495,12525,12524,12523,12522,12521,12520,12519,12528,12518,12438,12437,12436,12481,12505,12506,12507,12575,12574,12573,12572,12571,12570,12569,12568,12567,12576,12566,12564,12563,12562,12561,12560,12559,12558,12557,12594,12593,12592,12591,12600,12590,12588,12587,12586,12585,12584,12583,12582,12581,12580,12555,12577,12554,12529,12527,12526,12509,12508,12517,12531,12551,12550,12490,12489,12488,12547,12530,12541,12504,12494,12492,12491,12552,12542,12540,12539,12535,12549,12548,12458,12457,12445,12431,12430,12429,12428,12427,12426,12425,12424,12423,12422,12421,12420,12419,12418,12534,12546,12532,12417,12416,12415,12414,12413,12432,12433,12434,12435,12455,12454,12453,12452,12451,12450,12449,12448,12447,12456,12446,12444,12443,12442,12441,12440,12439,12538,12537,12536,12533,12412,12487,12486,12485,12484,12459,12545,12544,12543,12510,12556,12565,12578,12589,12579,12599,12598,12597,12596,12595,12516,12515,12514,12513,12512,12511' | \
 	pipenv run python scripts/process_platinum_results.py st-clair > $@
+
+data/results-unofficial/stark.csv: input/manual/stark.csv
+	cp $< $@
 
 data/results-unofficial/tazewell.csv: input/results-unofficial/tazewell-constitution.csv input/results-unofficial/tazewell-president.csv
 	xsv join 1 $< 1 $(filter-out $<,$^) | \
