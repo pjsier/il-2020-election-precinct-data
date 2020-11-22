@@ -467,7 +467,7 @@ data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 data/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
 	mapshaper -i $< \
 	-proj crs=wgs84 \
-	-rename-fields precinct=PCTNAME \
+	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ")' \
 	-dissolve2 precinct \
 	-o $@
 
