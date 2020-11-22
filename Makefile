@@ -345,7 +345,7 @@ data/precincts/ogle.geojson:
 
 data/precincts/peoria.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/arcgis/rest/services/Voting_Precincts/FeatureServer/0 - | \
-	mapshaper -i - -rename-fields precinct=PRECINCTID -o $@
+	mapshaper -i - -rename-fields precinct=NAME -o $@
 
 data/precincts/perry.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "145"' -o $@
@@ -783,23 +783,24 @@ data/results-unofficial/ogle.csv:
 	pipenv run python scripts/scrape_ogle_results.py | \
 	pipenv run python scripts/process_text_results.py ogle > $@
 
-# data/results-unofficial/peoria.csv: input/results-unofficial/peoria-turnout.csv input/results-unofficial/peoria-president.csv
-# 	xsv join precinct $< precinct $(filter-out $<,$^) > $@
+# TODO: Double check results here
+data/results-unofficial/peoria.csv: input/results-unofficial/peoria.csv input/results-unofficial/peoria-turnout.csv
+	xsv join precinct $< precinct $(filter-out $<,$^) | \
+	xsv select '!precinct[1]' > $@
 
-# input/results-unofficial/peoria-turnout.csv:
-# 	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/1 - | \
-# 	mapshaper -i - -rename-fields precinct=PRECINCTID,registered=REGVOTERS,ballots=TOTBALLOTS -filter-fields precinct,registered,ballots -o $@
+input/results-unofficial/peoria.csv: input/results-unofficial/peoria.pdf
+	java -jar bin/tabula.jar -c %25,40,80,85 -p 1-507 $< | \
+	pipenv run python scripts/process_peoria_results.py > $@
 
-# input/results-unofficial/peoria-president.csv:
-# 	pipenv run esri2geojson https://services.arcgis.com/iPiPjILCMYxPZWTc/ArcGIS/rest/services/PeoriaCountyElectionResults/FeatureServer/3 - | \
-# 	mapshaper -i - -rename-fields precinct=PRECINCTID,totalvotes=Total_candidate_Votes -filter-fields precinct,CANDIDATE,PARTY,NUMVOTES,totalvotes -o format=csv - | \
-# 	pipenv run python scripts/process_peoria_results.py > $@
+input/results-unofficial/peoria-turnout.csv: input/results-unofficial/peoria-turnout.pdf
+	java -jar bin/tabula.jar -c %13,30,38,48,65,77,88 -p 1-5 $< | \
+	pipenv run python scripts/process_peoria_results_turnout.py > $@
 
-# input/results-unofficial/peoria.pdf:
-# 	wget -O $@ https://peoriaelections.org/DocumentCenter/View/502/official-precinct
+input/results-unofficial/peoria.pdf:
+	wget -O $@ https://peoriaelections.org/DocumentCenter/View/502/official-precinct
 
-# input/results-unofficial/peoria-turnout.pdf:
-# 	wget -O $@ https://peoriaelections.org/DocumentCenter/View/503/official-precinct_turnout
+input/results-unofficial/peoria-turnout.pdf:
+	wget -O $@ https://peoriaelections.org/DocumentCenter/View/503/official-precinct_turnout
 
 data/results-unofficial/pike.csv:
 	wget -qO - 'https://platinumelectionresults.com/reports/township/103/pd/13915,13899,13886,13887,13888,13889,13890,13891,13892,13893,13894,13895,13896,13897,13898,13900,13914,13901,13902,13903,13904,13905,13906,13907,13908,13909,13910,13911,13912,13913,13885' | \
