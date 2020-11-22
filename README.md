@@ -1,14 +1,4 @@
-# Illinois 2020 Elections Precinct Data
-
-## TODO
-
-- Pull raw text results
-  - https://github.com/PalmBeachPost/election-results-parser
-  - https://github.com/newsdev/elex
-- Scrapers for
-  - platinumelectionresults.com
-  - http://dekalb.il.electionconsole.com/precinct.php?e=2020%20General
-- See if can pull precinct results from pollresults.net
+# Illinois 2020 General Election Precinct Data
 
 ## Prerequisites
 
