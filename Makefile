@@ -219,8 +219,12 @@ data/precincts/knox.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "095" && !precinct.includes("GALESBURG CITY")' -o $@
 
 data/precincts/lake.geojson:
-	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com//IL/Lake/105841/271143/json/7cdabc13-5da7-496f-9853-8604f5b68072.json Lake | \
-	mapshaper -i - -rename-fields precinct=Name -o $@
+	pipenv run esri2geojson https://maps.lakecountyil.gov/arcgis/rest/services/GISMapping/WABPoliticalBoundaries/MapServer/5 - | \
+	mapshaper -i - \
+	-each 'precinct = PRECINCT.toString()' \
+	-filter-fields precinct \
+	-dissolve2 precinct \
+	-o $@
 
 data/precincts/lasalle.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
@@ -459,13 +463,16 @@ data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 	-each 'precinct = precinct.replace(" TWP", "").replace("CORINTH", "CORINTH 1").replace("GRASSY", "GRASSY 1").replace("EM09 EAST MARION", "EAST MARION 9").replace("EM10 EAST MARION", "EAST MARION 10")' \
 	-o $@
 
-# TODO: Fix missed
-data/precincts/winnebago.geojson:
-	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Winnebago/107127/268257/json/cf87babd-eb26-4e37-bf3f-b3e4e62e2c52.json Winnebago | \
-	mapshaper -i - \
-	-rename-fields precinct=Name \
-	-each 'precinct = precinct.replace("  ", " ").toUpperCase()' \
+# Cherry Valley 12, Cherry Valley 9, Harlem 18, Harlem 4
+data/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
+	mapshaper -i $< \
+	-proj crs=wgs84 \
+	-rename-fields precinct=PCTNAME \
+	-dissolve2 precinct \
 	-o $@
+
+input/precincts/Shapefiles_2020.shp: input/foia/Shapefiles_2020.zip
+	unzip -u $< -d $(dir $@)
 
 data/precincts/woodford.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/pPTAs43AFhhk0pXQ/ArcGIS/rest/services/WoodfordCounty_Election_Polling_Places/FeatureServer/1 $@
@@ -511,9 +518,13 @@ input/precincts/Galesburg_City_Council_Wards.shp: input/precincts/city-of-galesb
 input/precincts/city-of-galesburg.zip:
 	wget -O $@ https://opendata.arcgis.com/datasets/5c909cb0bf8b41d4926e0464645bc2e2_0.zip
 
+# Missing 1404
 data/precincts/city-of-rockford.geojson:
-	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "City of Rockford" | \
-	mapshaper -i - -rename-fields precinct=Name -o $@
+	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "city-of-rockford" | \
+	mapshaper -i - \
+	-rename-fields precinct=Name \
+	-dissolve2 precinct \
+	-o $@
 
 input/precincts/il_2016.geojson: input/precincts/il_2016.shp
 	mapshaper -i $< -proj wgs84 -filter-fields COUNTYFP,NAME -rename-fields precinct=NAME -o $@
@@ -651,7 +662,12 @@ input/results-unofficial/kankakee.zip:
 # data/results-unofficial/kendall.csv:
 # 	pipenv run python scripts/scrape_election_console_results.py kendall 'http://kendall.il.electionconsole.com/electionsummary.php?e=2020%20General%20Election' > $@
 
-# TODO: More precincts than results rows for Lake
+data/results-unofficial/lake.csv: input/results-unofficial/lake.zip
+	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py lake | \
+	mapshaper -i - format=csv \
+	-each 'precinct = precinct.split(" ").slice(-1)[0]' \
+	-o $@
+
 input/results-unofficial/lake.zip:
 	wget -O $@ https://results.enr.clarityelections.com//IL/Lake/105841/270844/reports/detailxml.zip
 
