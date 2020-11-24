@@ -52,7 +52,7 @@ def get_precinct_info(precinct_str):
 
 def process_table(table, election):
     candidates = [th.text.strip() for th in table.find_all("th")][3:-1]
-    headers = ["registered", "ballots", f"{election}-votes"] + candidates
+    headers = [f"{election}-votes", "registered", "ballots"] + candidates
     rows = []
     for row in table.select("tr[align='right']")[:-1]:
         row_dict = {}
