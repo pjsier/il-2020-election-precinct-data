@@ -49,13 +49,15 @@ def process_precinct(url, precinct, registered, ballots):
     res = requests.get(url)
     soup = BeautifulSoup(res.text, "html.parser")
     choice_tables = soup.select("table.choice")
-
+    # Remove extra zero padding to match map results
+    # TODO: Can re add by splitting in mapshaper if needed for official
+    precinct_str = precinct.replace("00", "")
     return {
-        "id": f"kane---{precinct}",
+        "id": f"kane---{precinct_str}",
         "authority": "kane",
         "place": "",
         "ward": "",
-        "precinct": precinct,
+        "precinct": precinct_str,
         "registered": registered,
         "ballots": ballots,
         **parse_table(choice_tables[1]),

@@ -13,9 +13,20 @@ install:
 output/%.geojson: data/precincts/%.geojson data/results-unofficial/%.csv
 	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -o $@
 
+# MELROSE PCT 2 is "MELROSE 2" in current results
 data/precincts/adams.geojson:
 	pipenv run esri2geojson http://www.adamscountyarcserver.com/adamscountyarcserver/rest/services/AdamsCoBaseMapFG_2018/MapServer/43 - | \
-	mapshaper -i - -rename-fields precinct_name=Precinct -rename-fields precinct=pwd -o $@
+	mapshaper -i - \
+	-rename-fields precinct=Precinct \
+	-each 'precinct = precinct.replace("Q ", "QUINCY ")' \
+	-each 'precinct = precinct.replace("CAMP POINT ", "CAMP POINT PCT ")' \
+	-each 'precinct = precinct.replace("EL ", "ELLINGTON PCT ")' \
+	-each 'precinct = precinct.replace("MEL ", "MELROSE PCT ")' \
+	-each 'precinct = precinct.replace("MENDON ", "MENDON PCT ")' \
+	-each 'precinct = precinct.replace("PAYSON ", "PAYSON PCT ")' \
+	-each 'precinct = precinct.replace("RIV ", "RIVERSIDE ")' \
+	-dissolve2 precinct \
+	-o $@
 
 data/precincts/alexander.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "003"' -o $@
@@ -72,7 +83,9 @@ data/precincts/clinton.geojson: input/precincts/il_2016.geojson
 
 data/precincts/coles.geojson:
 	pipenv run python scripts/scrape_coles.py | \
-	mapshaper -i - -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-88.33333333333333 +k=0.999975 +x_0=300000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 -o $@
+	mapshaper -i - -proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-88.33333333333333 +k=0.999975 +x_0=300000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
+	-rename-fields precinct=PrecinctName \
+	-o $@
 
 data/precincts/cook.geojson:
 	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 - | \
@@ -121,7 +134,10 @@ data/precincts/edwards.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "047"' -o $@
 
 data/precincts/effingham.geojson:
-	pipenv run esri2geojson https://services.arcgis.com/vj0V9Lal6oiz0YXp/ArcGIS/rest/services/ElectoralDistricts/FeatureServer/1 $@
+	pipenv run esri2geojson https://services.arcgis.com/vj0V9Lal6oiz0YXp/ArcGIS/rest/services/ElectoralDistricts/FeatureServer/1 - | \
+	mapshaper -i - \
+	-rename-fields precinct=NAME \
+	-o $@
 
 data/precincts/fayette.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
@@ -159,7 +175,11 @@ data/precincts/hamilton.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "065"' -o $@
 
 data/precincts/hancock.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "067"' -o $@
+	mapshaper -i $< \
+	-filter 'COUNTYFP === "067"' \
+	-each 'precinct = precinct.replace(" IV", " 4").replace(" III", " 3").replace(" II", " 2").replace(" I", " 1")' \
+	-each 'precinct = precinct.replace("ST ", "ST. ")' \
+	-o $@
 
 data/precincts/hardin.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "069"' -o $@
@@ -174,7 +194,10 @@ data/precincts/henry.geojson: input/precincts/il_2016.geojson
 	-o $@
 
 data/precincts/iroquois.geojson:
-	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/IroquoisIL/IroquoisIL_PAT_GIS/MapServer/8 $@
+	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/IroquoisIL/IroquoisIL_PAT_GIS/MapServer/8 - | \
+	mapshaper -i - \
+	-rename-fields precinct=Name \
+	-o $@
 
 data/precincts/jackson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "077"' -o $@
@@ -194,10 +217,12 @@ data/precincts/jo-daviess.geojson: input/precincts/il_2016.geojson
 data/precincts/johnson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "087"' -o $@
 
-# TODO: 3 precincts prefixed AC don't have matching records
 data/precincts/kane.geojson:
 	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/1db346a5fb5c4a5abfe52acfc97ad2a2/rest/services/Kane_Precincts/FeatureServer/0 --header Referer:'https://kanegis.maps.arcgis.com/apps/webappviewer/index.html' - | \
-	mapshaper -i - -rename-fields precinct=NPrecinct -o $@
+	mapshaper -i - \
+	-rename-fields precinct=PRECINCT \
+	-dissolve2 precinct \
+	-o $@
 
 data/precincts/kankakee.geojson:
 	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 - | \
@@ -226,10 +251,10 @@ data/precincts/lake.geojson:
 	-dissolve2 precinct \
 	-o $@
 
-data/precincts/lasalle.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< \
-	-filter 'COUNTYFP === "099"' \
-	-each 'precinct = precinct.replace("LA SALLE", "LASALLE")' \
+data/precincts/lasalle.geojson:
+	pipenv run esri2geojson http://gis.lasallecounty.org/arcgis/rest/services/CountyClerk/LaSalle_co_il_polling/MapServer/2 - | \
+	mapshaper -i - \
+	-rename-fields precinct=CountyClerk.DBO.VotingPrecinct.NAME \
 	-o $@
 
 data/precincts/lawrence.geojson: input/precincts/il_2016.geojson
@@ -246,10 +271,16 @@ data/precincts/livingston.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "105"' -o $@
 
 data/precincts/logan.geojson:
-	pipenv run esri2geojson https://www.centralilmaps.com/arcgis/rest/services/Logan/Logan_Flex_1/MapServer/40 $@
+	pipenv run esri2geojson https://www.centralilmaps.com/arcgis/rest/services/Logan/Logan_Flex_1/MapServer/40 - | \
+	mapshaper -i - \
+	-rename-fields precinct=Name \
+	-o $@
 
 data/precincts/macon.geojson:
-	pipenv run esri2geojson https://services1.arcgis.com/a3k0qIja5SolIRYR/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 $@
+	pipenv run esri2geojson https://services1.arcgis.com/a3k0qIja5SolIRYR/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 - | \
+	mapshaper -i - \
+	-rename-fields precinct=name \
+	-o $@
 
 data/precincts/macoupin.geojson:
 	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/MacoupinIL/MacoupinIL_PAT_GIS/MapServer/4 - | \
@@ -330,7 +361,7 @@ data/precincts/morgan.geojson:
 	wget -qO - 'https://morganmaps.maps.arcgis.com/sharing/rest/content/items/8d7a6a2f54fa4686b6cbcfc47c6fb4d1/data?f=json' | \
 	jq '.operationalLayers[0].featureCollection.layers[0].featureSet' | \
 	pipenv run arcgis2geojson | \
-	mapshaper -i - -proj init=webmercator crs=wgs84 -o $@
+	mapshaper -i - -proj init=webmercator crs=wgs84 -rename-fields precinct=Precinct -o $@
 
 data/precincts/moultrie.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "139"' -o $@
@@ -351,7 +382,10 @@ data/precincts/perry.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "145"' -o $@
 
 data/precincts/piatt.geojson:
-	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server2/rest/services/Piatt_CountyClerk/Precincts/MapServer/0 $@
+	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server2/rest/services/Piatt_CountyClerk/Precincts/MapServer/0 - | \
+	mapshaper -i - \
+	-rename-fields precinct=Precinct \
+	-o $@
 
 data/precincts/pike.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "149"' -o $@
@@ -371,8 +405,9 @@ data/precincts/randolph.geojson: input/precincts/il_2016.geojson
 	-each 'precinct = precinct.replace(/-/gi, " ")' \
 	-o $@
 
-data/precincts/richland.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "159"' -o $@
+data/precincts/richland.geojson:
+	pipenv run python scripts/scrape_richland.py | \
+	mapshaper -i - -clean rewind -o $@
 
 data/precincts/rock-island.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "161"' -o $@
@@ -449,7 +484,10 @@ data/precincts/white.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "193"' -o $@
 
 data/precincts/whiteside.geojson:
-	pipenv run esri2geojson https://services.arcgis.com/l0M0OC6J9QAHCiGx/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 $@
+	pipenv run esri2geojson https://services.arcgis.com/l0M0OC6J9QAHCiGx/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 - | \
+	mapshaper -i - \
+	-rename-fields precinct=name \
+	-o $@
 
 data/precincts/will.geojson:
 	pipenv run esri2geojson https://gis.willcountyillinois.com/hosting/rest/services/PoliticalLayers/Precincts/MapServer/0 - | \
@@ -464,18 +502,23 @@ data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 	-o $@
 
 # Cherry Valley 12, Cherry Valley 9, Harlem 18, Harlem 4
+# Cherry Valley 12 merged into 1
+# Cherry Valley 9 merged into 4
+# Harlem 18 merged into 16
+# Harlem 4 merged into 19
 data/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
 	mapshaper -i $< \
 	-proj crs=wgs84 \
 	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ")' \
-	-dissolve2 precinct \
-	-o $@
 
 input/precincts/Shapefiles_2020.shp: input/foia/Shapefiles_2020.zip
 	unzip -u $< -d $(dir $@)
 
 data/precincts/woodford.geojson:
-	pipenv run esri2geojson https://services.arcgis.com/pPTAs43AFhhk0pXQ/ArcGIS/rest/services/WoodfordCounty_Election_Polling_Places/FeatureServer/1 $@
+	pipenv run esri2geojson https://services.arcgis.com/pPTAs43AFhhk0pXQ/ArcGIS/rest/services/WoodfordCounty_Election_Polling_Places/FeatureServer/1 - | \
+	mapshaper -i - \
+	-rename-fields precinct=Precinct_N \
+	-o $@
 
 data/precincts/city-of-bloomington.geojson: input/precincts/mclean.geojson
 	mapshaper -i $< \
@@ -500,7 +543,10 @@ input/precincts/city-of-chicago-wards.geojson:
 	wget -O $@ 'https://data.cityofchicago.org/api/geospatial/sp34-6z76?method=export&format=GeoJSON'
 
 data/precincts/city-of-danville.geojson:
-	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/463571faad874d958bcf15661f49f25c/rest/services/Administrative/Voting_Precincts/MapServer/1 $@
+	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/463571faad874d958bcf15661f49f25c/rest/services/Administrative/Voting_Precincts/MapServer/1 - | \
+	mapshaper -i - \
+	-rename-fields precinct=Precinct \
+	-o $@
 
 data/precincts/city-of-east-st-louis.geojson: input/precincts/st-clair.geojson
 	mapshaper -i $< \
@@ -510,7 +556,9 @@ data/precincts/city-of-east-st-louis.geojson: input/precincts/st-clair.geojson
 	-o $@
 
 data/precincts/city-of-galesburg.geojson: input/precincts/Galesburg_City_Council_Wards.shp
-	mapshaper -i $< -o $@
+	mapshaper -i $< \
+	-each 'precinct = PRECINCT.toString()' \
+	-o $@
 
 input/precincts/Galesburg_City_Council_Wards.shp: input/precincts/city-of-galesburg.zip
 	unzip -u $< -d $(dir $@)
@@ -657,10 +705,6 @@ data/results-unofficial/kane.csv:
 
 input/results-unofficial/kankakee.zip:
 	wget -O $@ https://results.enr.clarityelections.com//IL/Kankakee/106271/267759/reports/detailxml.zip
-
-# TODO: Pending
-# data/results-unofficial/kendall.csv:
-# 	pipenv run python scripts/scrape_election_console_results.py kendall 'http://kendall.il.electionconsole.com/electionsummary.php?e=2020%20General%20Election' > $@
 
 data/results-unofficial/lake.csv: input/results-unofficial/lake.zip
 	unzip -p $< | pipenv run python scripts/scrape_clarity_results.py lake | \
