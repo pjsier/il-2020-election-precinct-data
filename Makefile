@@ -67,7 +67,7 @@ data/precincts/cass.geojson:
 
 data/precincts/champaign.geojson:
 	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 - | \
-	mapshaper -i - -each 'precinct = TWPNAME.toUpperCase() + " " + PrecinctNum' -o $@
+	mapshaper -i - -each 'precinct = TWPNAME.toUpperCase() + " " + +PrecinctNum' -o $@
 
 data/precincts/christian.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "021"' -o $@
@@ -90,8 +90,7 @@ data/precincts/coles.geojson:
 data/precincts/cook.geojson:
 	pipenv run esri2geojson https://gis12.cookcountyil.gov/arcgis/rest/services/electionSrvcLite/MapServer/1 - | \
 	mapshaper -i - \
-	-filter-fields NAME,Num \
-	-each 'precinct = NAME + " " + Num' \
+	-rename-fields precinct=Idpct_txt \
 	-o $@
 
 data/precincts/crawford.geojson: input/precincts/il_2016.geojson
@@ -363,8 +362,9 @@ data/precincts/morgan.geojson:
 	pipenv run arcgis2geojson | \
 	mapshaper -i - -proj init=webmercator crs=wgs84 -rename-fields precinct=Precinct -o $@
 
-data/precincts/moultrie.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "139"' -o $@
+data/precincts/moultrie.geojson:
+	pipenv run esri2geojson https://ags.bhamaps.com/arcgisserver/rest/services/MoultrieIL/MoultrieIL_PAT_Basemap_WM/MapServer/7 - | \
+	mapshaper -i - -rename-fields precinct=District -o $@
 
 data/precincts/ogle.geojson:
 	pipenv run python scripts/pybeacondump.py 'https://beacon.schneidercorp.com/Application.aspx?AppID=71&LayerID=592&PageTypeID=1&PageID=953' 5178 - | \
@@ -438,14 +438,24 @@ data/precincts/st-clair.geojson: input/precincts/st-clair.geojson
 input/precincts/st-clair.geojson:
 	pipenv run esri2geojson https://publicmap01.co.st-clair.il.us/arcgis/rest/services/SCC_voting_district/MapServer/7 $@
 
-data/precincts/stark.geojson: input/precincts/il_2016.geojson
+data/precincts/stark.geojson: input/precincts/stark.geojson
+	mapshaper -i $< -rename-fields precinct=name -o $@
+
+input/precincts/stark.geojson: input/precincts/stark.kml
+	pipenv run k2g $< $(dir $@)
+
+input/precincts/stark.kml:
+	wget -O $@ 'https://www.google.com/maps/d/kml?mid=1T0Iz1DogKirf-ZbEfFlFoIRSAxY&lid=_WnUNJnJuT8&forcekml=1'
+
+data/precincts/stephenson.geojson: input/precincts/County_Precincts_2010_Census.shp
 	mapshaper -i $< \
-	-filter 'COUNTYFP === "175"' \
-	-each 'precinct = precinct.split(" ").slice(0, -1).join(" ")' \
+	-proj wgs84 \
+	-each 'precinct = TOWNSHIP_N + " " + PRECINCT_N' \
 	-o $@
 
-data/precincts/stephenson.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "177"' -o $@
+# Pulled from site manually, but included because uses strict firewall for automated downloads
+input/precincts/County_Precincts_2010_Census.shp: input/foia/County_Precincts_2010_Census.zip
+	unzip -u $< -d $(dir $@)
 
 data/precincts/tazewell.geojson:
 	pipenv run esri2geojson https://gis.tazewell.com/maps/rest/services/ElectionPoll/ElectionPollingPlaces/MapServer/1 - | \
@@ -536,7 +546,7 @@ input/precincts/city-of-chicago.geojson:
 	wget -O - https://raw.githubusercontent.com/datamade/chicago-municipal-elections/master/precincts/2019_precincts.geojson | \
 	mapshaper -i - \
 	-rename-fields precinct_num=PRECINCT \
-	-each 'precinct = WARD.toString().padStart(2, "0") + precinct_num.toString().padStart(3, "0")' \
+	-each 'precinct = "Ward " + WARD.toString().padStart(2, "0") + " Precinct " + precinct_num.toString().padStart(2, "0")' \
 	-o $@
 
 input/precincts/city-of-chicago-wards.geojson:
