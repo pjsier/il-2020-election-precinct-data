@@ -10,7 +10,7 @@ clean:
 install:
 	pipenv sync --dev
 
-output/%.geojson: data/precincts/%.geojson data/results-unofficial/%.csv
+output/%.geojson: data/precincts/%.geojson data/results/%.csv
 	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -o $@
 
 # MELROSE PCT 2 is "MELROSE 2" in current results
@@ -123,7 +123,7 @@ data/precincts/dupage.geojson:
 	pipenv run esri2geojson https://gis.dupageco.org/arcgis/rest/services/Elections/ElectionPrecincts/MapServer/0 - | \
 	mapshaper -i - \
 	-rename-fields precinct=PrecinctName \
-	-each 'precinct = precinct.replace(Precinct.toString(), Precinct.toString().padStart(3, "0"))' \
+	-each 'precinct = precinct.replace(Precinct.toString(), " " + Precinct.toString().padStart(3, "0"))' \
 	-o $@
 
 data/precincts/edgar.geojson: input/precincts/il_2016.geojson
@@ -216,6 +216,7 @@ data/precincts/jo-daviess.geojson: input/precincts/il_2016.geojson
 data/precincts/johnson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "087"' -o $@
 
+# TODO: Might have to pad more
 data/precincts/kane.geojson:
 	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/1db346a5fb5c4a5abfe52acfc97ad2a2/rest/services/Kane_Precincts/FeatureServer/0 --header Referer:'https://kanegis.maps.arcgis.com/apps/webappviewer/index.html' - | \
 	mapshaper -i - \
@@ -242,6 +243,7 @@ input/precincts/kendall.zip:
 data/precincts/knox.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "095" && !precinct.includes("GALESBURG CITY")' -o $@
 
+# Matches if only numbers used for CSV precincts
 data/precincts/lake.geojson:
 	pipenv run esri2geojson https://maps.lakecountyil.gov/arcgis/rest/services/GISMapping/WABPoliticalBoundaries/MapServer/5 - | \
 	mapshaper -i - \
@@ -254,6 +256,7 @@ data/precincts/lasalle.geojson:
 	pipenv run esri2geojson http://gis.lasallecounty.org/arcgis/rest/services/CountyClerk/LaSalle_co_il_polling/MapServer/2 - | \
 	mapshaper -i - \
 	-rename-fields precinct=CountyClerk.DBO.VotingPrecinct.NAME \
+	-each 'precinct = precinct.match(/\d/gi) ? precinct : precinct + " 1"' \
 	-o $@
 
 data/precincts/lawrence.geojson: input/precincts/il_2016.geojson
@@ -410,7 +413,10 @@ data/precincts/richland.geojson:
 	mapshaper -i - -clean rewind -o $@
 
 data/precincts/rock-island.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "161"' -o $@
+	mapshaper -i $< \
+	-filter 'COUNTYFP === "161"' \
+	-each 'precinct = precinct.replace("SO M", "SOUTH M").replace("SO R", "SOUTH R")' \
+	-o $@
 
 data/precincts/saline.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "165"' -o $@
@@ -459,7 +465,9 @@ input/precincts/County_Precincts_2010_Census.shp: input/foia/County_Precincts_20
 
 data/precincts/tazewell.geojson:
 	pipenv run esri2geojson https://gis.tazewell.com/maps/rest/services/ElectionPoll/ElectionPollingPlaces/MapServer/1 - | \
-	mapshaper -i - -each 'precinct = NAME.toUpperCase().replace("BOYTON", "BOYNTON").replace("DEERCREEK", "DEER CREEK")' -o $@
+	mapshaper -i - \
+	-each 'precinct = NAME.toUpperCase().replace("BOYTON", "BOYNTON").replace("DEERCREEK", "DEER CREEK").replace("LT ", "LITTLE ").replace(" 0", " ")' \
+	-o $@
 
 data/precincts/union.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
@@ -502,7 +510,7 @@ data/precincts/whiteside.geojson:
 data/precincts/will.geojson:
 	pipenv run esri2geojson https://gis.willcountyillinois.com/hosting/rest/services/PoliticalLayers/Precincts/MapServer/0 - | \
 	mapshaper -i - \
-	-rename-fields precinct=NAME \
+	-each 'precinct = NAME.replace("DUPAGE", "DU PAGE")' \
 	-o $@
 
 data/precincts/williamson.geojson: input/precincts/il_2016.geojson
@@ -519,7 +527,8 @@ data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 data/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
 	mapshaper -i $< \
 	-proj crs=wgs84 \
-	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ")' \
+	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ").replace("ROCKTON1", "ROCKTON 1")' \
+	-o $@
 
 input/precincts/Shapefiles_2020.shp: input/foia/Shapefiles_2020.zip
 	unzip -u $< -d $(dir $@)
@@ -582,6 +591,7 @@ data/precincts/city-of-rockford.geojson:
 	mapshaper -i - \
 	-rename-fields precinct=Name \
 	-dissolve2 precinct \
+	-each 'precinct = "WARD " + (+precinct.slice(0, 2)) + " PRECINCT " + (+precinct.slice(2))' \
 	-o $@
 
 input/precincts/il_2016.geojson: input/precincts/il_2016.shp
@@ -594,6 +604,30 @@ input/precincts/il_2016.shp: input/precincts/il_2016.zip
 # https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/NH5S2I/A652IT&version=46.0
 input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
+
+data/results/lake.csv: input/results/il-2020.csv
+	xsv search -s authority '^$*' | \
+	mapshaper -i - format=csv \
+	-each 'precinct = precinct.split(" ").slice(-1)[0]' \
+	-o $@
+
+# TODO: Can't confirm this works without final results
+data/results/%.csv: input/results/il-2020.csv
+	xsv search -s authority '^$*' $< > $@
+
+input/results/il-2020.csv: input/results/us-president.csv input/results/us-senate.csv input/results/il-constitution.csv
+	xsv cat rows $^ | \
+	pipenv run python scripts/process_boe_results.py > $@
+
+# TODO: Placeholders, might end up being same URL
+input/results/us-president.csv:
+	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-120-PRESIDENT%20AND%20VICE%20PRESIDENT-2020GE.csv'
+
+input/results/us-senate.csv:
+	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-160-UNITED%20STATES%20SENATOR-2020GE.csv'
+
+input/results/il-constitution.csv:
+	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-100-1A-1-2016GE.csv'
 
 data/results-unofficial/boone.csv: input/results-unofficial/boone-constitution.csv input/results-unofficial/boone-president.csv
 	xsv join --no-headers 1 $< 1 $(filter-out $<,$^) | \
@@ -908,7 +942,7 @@ data/results-unofficial/sangamon.csv:
 
 data/results-unofficial/st-clair.csv: input/results-unofficial/st-clair-results.csv input/results-unofficial/st-clair-registered.csv
 	xsv join precinct $< precinct $(filter-out $<,$^) | \
-	xsv select 'id,authority,place,ward,precinct,ballots,registered,"us-president-dem","us-president-rep","us-president-votes","il-constitution-yes","il-constitution-no","il-constitution-votes"' > $@
+	xsv select 'id,authority,place,ward,precinct,ballots,registered[1],"us-president-dem","us-president-rep","us-president-votes","il-constitution-yes","il-constitution-no","il-constitution-votes"' > $@
 
 input/results-unofficial/st-clair-registered.csv:
 	pipenv run python scripts/scrape_platinum_registered.py https://stclair.platinumelectionresults.com/turnouts/precincts/6 > $@
@@ -972,7 +1006,7 @@ data/results-unofficial/city-of-chicago.csv:
 
 data/results-unofficial/city-of-east-st-louis.csv: input/results-unofficial/city-of-east-st-louis-results.csv input/results-unofficial/city-of-east-st-louis-registered.csv
 	xsv join precinct $< precinct $(filter-out $<,$^) | \
-	xsv select 'id,authority,place,ward,precinct,ballots,registered,"us-president-dem","us-president-rep","us-president-votes","il-constitution-yes","il-constitution-no","il-constitution-votes"' > $@
+	xsv select 'id,authority,place,ward,precinct,ballots,registered[1],"us-president-dem","us-president-rep","us-president-votes","il-constitution-yes","il-constitution-no","il-constitution-votes"' > $@
 
 input/results-unofficial/city-of-east-st-louis-registered.csv:
 	pipenv run python scripts/scrape_platinum_registered.py https://stclair.platinumelectionresults.com/turnouts/precincts/48 > $@
