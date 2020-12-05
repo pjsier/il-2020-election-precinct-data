@@ -1,4 +1,4 @@
-PRECINCT_FILES := $(shell cat input/jurisdictions.txt | xargs -I {} echo "data/precincts/{}.geojson")
+PRECINCT_FILES := $(shell cat input/jurisdictions.txt | xargs -I {} echo "output/{}.geojson")
 
 all: $(PRECINCT_FILES)
 
@@ -9,6 +9,12 @@ clean:
 .PHONY: install
 install:
 	pipenv sync --dev
+
+output/il.geojson: $(PRECINCT_FILES)
+	mapshaper -i $^ combine-files \
+	-filter-fields authority,precinct,registered,ballots,us-president-dem,us-president-rep,us-president-votes,il-constitution-yes,il-constitution-no,il-constitution-votes,us-senate-dem,us-senate-rep,us-senate-wil,us-senate-votes \
+	-merge-layers force \
+	-o $@
 
 output/%.geojson: data/precincts/%.geojson data/results/%.csv
 	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -o $@
