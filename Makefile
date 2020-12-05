@@ -91,7 +91,11 @@ data/precincts/cass.geojson:
 
 data/precincts/champaign.geojson:
 	pipenv run esri2geojson --proxy https://services.ccgisc.org/proxy/proxy.ashx? https://services.ccgisc.org/server/rest/services/CountyClerk/Precincts/MapServer/0 - | \
-	mapshaper -i - -each 'precinct = TWPNAME.toUpperCase() + " " + +PrecinctNum' -o $@
+	mapshaper -i - \
+	-each 'precinct = ["AYERS", "COLFAX", "CONDIT", "CRITTENDEN", "EAST BEND", "HARWOOD", "HENSLEY", "KERR", "NEWCOMB", "PESOTUM", "PHILO", "RAYMOND", "SIDNEY", "SOMER", "SOUTH HOMER", "STANTON"].includes(TWPNAME.toUpperCase()) ? TWPNAME.toUpperCase() : TWPNAME.toUpperCase() + " " + +PrecinctNum' \
+	-each 'precinct = precinct.replace("BROWN 1", "BROWN FISHER").replace("BROWN 2", "BROWN FOOSLAND").replace("COMPROMISE 1", "COMPROMISE GIFFORD").replace("COMPROMISE 2", "COMPROMISE PENFIELD").replace("SADORUS 1", "SADORUS SADORUS").replace("SADORUS 2", "SADORUS IVESDALE").replace("SCOTT 1", "SCOTT BONDVILLE").replace("SCOTT 2", "SCOTT SEYMOUR")' \
+	-each 'precinct = precinct.replace("ST J", "ST. J")' \
+	-o $@
 
 data/precincts/christian.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
@@ -291,24 +295,25 @@ data/precincts/jo-daviess.geojson: input/precincts/il_2016.geojson
 data/precincts/johnson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< -filter 'COUNTYFP === "087"' -o $@
 
-# TODO: Might have to pad more
 data/precincts/kane.geojson:
 	pipenv run esri2geojson https://utility.arcgis.com/usrsvcs/servers/1db346a5fb5c4a5abfe52acfc97ad2a2/rest/services/Kane_Precincts/FeatureServer/0 --header Referer:'https://kanegis.maps.arcgis.com/apps/webappviewer/index.html' - | \
 	mapshaper -i - \
 	-rename-fields precinct=PRECINCT \
 	-dissolve2 precinct \
+	-each 'precinct = precinct.includes("W") ? precinct : precinct.slice(0,2) + "00" + precinct.slice(2)' \
 	-o $@
 
 data/precincts/kankakee.geojson:
 	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 - | \
 	mapshaper -i - \
-	-each 'precinct = name.toUpperCase().replace(/ (?=\d)/gi, " #")' \
+	-each 'precinct = name.toUpperCase().replace(/ (?=\d)/gi, " #").replace("NORTON #1", "NORTON")' \
 	-o $@
 
 data/precincts/kendall.geojson: input/precincts/Kendall_County_Voting_Precinct.shp
 	mapshaper -i $< \
 	-proj wgs84 \
 	-each 'precinct = (twp_name + " " + precinct_).replace(/-/gi, " ")' \
+	-dissolve2 precinct \
 	-o $@
 
 input/precincts/Kendall_County_Voting_Precinct.shp: input/precincts/kendall.zip
@@ -383,7 +388,9 @@ data/precincts/macoupin.geojson:
 
 data/precincts/madison.geojson:
 	pipenv run esri2geojson https://services.arcgis.com/Z0kKj2K728ngqqrp/ArcGIS/rest/services/ElectionGeography_public/FeatureServer/1 - | \
-	mapshaper -i - -rename-fields precinct=name -filter-fields precinct -o $@
+	mapshaper -i - \
+	-each 'precinct = name.replace("LEEF 01", "LEEF  01")' \
+	-o $@
 
 data/precincts/marion.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
@@ -551,7 +558,7 @@ data/precincts/richland.geojson:
 data/precincts/rock-island.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "161"' \
-	-each 'precinct = precinct.replace("SO M", "SOUTH M").replace("SO R", "SOUTH R")' \
+	-each 'precinct = precinct.replace("SOUTH M", "SO M").replace("SOUTH R", "SO R")' \
 	-o $@
 
 data/precincts/saline.geojson: input/precincts/il_2016.geojson
@@ -618,7 +625,7 @@ input/precincts/County_Precincts_2010_Census.shp: input/foia/County_Precincts_20
 data/precincts/tazewell.geojson:
 	pipenv run esri2geojson https://gis.tazewell.com/maps/rest/services/ElectionPoll/ElectionPollingPlaces/MapServer/1 - | \
 	mapshaper -i - \
-	-each 'precinct = NAME.toUpperCase().replace("BOYTON", "BOYNTON").replace("DEERCREEK", "DEER CREEK").replace("LT ", "LITTLE ").replace(" 0", " ")' \
+	-each 'precinct = NAME.toUpperCase().replace(" 0", " ").replace("BOYTON 1", "BOYNTON").replace("DEERCREEK 1", "DEER CREEK").replace("DILLON 1", "DILLON").replace("HITTLE 1", "HITTLE").replace("MALONE 1", "MALONE").replace("LITTLE ", "LT ")' \
 	-o $@
 
 data/precincts/union.geojson: input/precincts/il_2016.geojson
@@ -696,7 +703,8 @@ data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 data/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
 	mapshaper -i $< \
 	-proj crs=wgs84 \
-	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ").replace("ROCKTON1", "ROCKTON 1")' \
+	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ").replace("ROCKTON1", "ROCKTON 1").replace("ROCKFORD ROCKFORD", "ROCKFORD")' \
+	-dissolve2 precinct \
 	-o $@
 
 input/precincts/Shapefiles_2020.shp: input/foia/Shapefiles_2020.zip
@@ -755,7 +763,7 @@ input/precincts/Galesburg_City_Council_Wards.shp: input/precincts/city-of-galesb
 input/precincts/city-of-galesburg.zip:
 	wget -O $@ https://opendata.arcgis.com/datasets/5c909cb0bf8b41d4926e0464645bc2e2_0.zip
 
-# Missing 1404
+# TODO: Missing 1404
 data/precincts/city-of-rockford.geojson:
 	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "city-of-rockford" | \
 	mapshaper -i - \
@@ -776,32 +784,32 @@ input/precincts/il_2016.zip:
 	wget -O $@ 'https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH'
 
 data/results/cass.csv: input/results/il-2020.csv
-	xsv search -s authority '^cass' $< | \
+	xsv search -s authority '^cass$$' $< | \
 	mapshaper -i - format=csv \
 	-each 'precinct = precinct.replace(/\D/g, "")' \
 	-o $@
 
 data/results/franklin.csv: input/results/il-2020.csv
-	xsv search -s authority '^franklin' $< | \
+	xsv search -s authority '^franklin$$' $< | \
 	mapshaper -i - format=csv \
 	-each 'precinct = precinct.toUpperCase()' \
 	-o $@
 
 data/results/lake.csv: input/results/il-2020.csv
-	xsv search -s authority '^lake' $< | \
+	xsv search -s authority '^lake$$' $< | \
 	mapshaper -i - format=csv \
 	-each 'precinct = precinct.split(" ").slice(-1)[0]' \
 	-o $@
 
 data/results/marion.csv: input/results/il-2020.csv
-	xsv search -s authority '^marion' $< | \
+	xsv search -s authority '^marion$$' $< | \
 	mapshaper -i - format=csv \
 	-each 'precinct = precinct.toUpperCase()' \
 	-o $@
 
 # TODO: Can't confirm this works without final results
 data/results/%.csv: input/results/il-2020.csv
-	xsv search -s authority '^$*' $< > $@
+	xsv search -s authority '^$*$$' $< > $@
 
 input/results/il-2020.csv: input/results/us-president.csv input/results/us-senate.csv
 	xsv cat rows $^ | \
