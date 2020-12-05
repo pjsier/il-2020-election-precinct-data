@@ -2,21 +2,27 @@ import csv
 import sys
 from collections import defaultdict
 
+PRESIDENT = "PRESIDENT AND VICE PRESIDENT"
 TAX_AMENDMENT = "For the proposed amendment of Section 3 of Article IX of the Illinois Constitution."  # noqa
+SENATOR = "UNITED STATES SENATOR"
 
 IGNORE_CANDIDATES = ["Over Votes", "Under Votes", "Blank Ballots"]
-CONTESTS = ["PRESIDENT AND VICE PRESIDENT", TAX_AMENDMENT, "UNITED STATES SENATOR"]
+CONTESTS = [PRESIDENT, TAX_AMENDMENT, SENATOR]
 
 if __name__ == "__main__":
     precinct_dict = defaultdict(list)
 
     for row in csv.DictReader(sys.stdin):
+        if not row["PrecinctName"].strip():
+            continue
         precinct_dict[f"{row['JurisName']}|{row['PrecinctName']}"].append(row)
 
     results = []
     for precinct_key, precinct_rows in precinct_dict.items():
         authority_str, precinct = precinct_key.split("|")
         authority = authority_str.lower().replace(".", "").replace(" ", "-")
+        if "daviess" in authority:
+            authority = "jo-daviess"
         if "chicago" in authority:
             authority = "city-of-chicago"
         if "bloomington" in authority:
@@ -35,21 +41,19 @@ if __name__ == "__main__":
         # including under, over, and blank (might need to change)
         ballots = sum(
             [
-                int(
-                    r["VoteCount"]
-                    for r in precinct_rows
-                    if r["ContestName"] == "PRESIDENT"
-                )
+                int(r["VoteCount"])
+                for r in precinct_rows
+                if r["ContestName"] == PRESIDENT
             ]
         )
 
         president_rows = [
             r
             for r in precinct_rows
-            if r["ContestName"] == "PRESIDENT"
+            if r["ContestName"] == PRESIDENT
             and r["CandidateName"] not in IGNORE_CANDIDATES
         ]
-        president_total = sum([int(r["VoteCount"] for r in president_rows)])
+        president_total = sum([int(r["VoteCount"]) for r in president_rows])
         president_dem = sum(
             [
                 int(r["VoteCount"])
@@ -74,30 +78,26 @@ if __name__ == "__main__":
         constitution_total = sum([int(r["VoteCount"]) for r in constitution_rows])
         constitution_yes = sum(
             [
-                int(
-                    r["VoteCount"]
-                    for r in constitution_rows
-                    if r["CandidateName"] == "YES"
-                )
+                int(r["VoteCount"])
+                for r in constitution_rows
+                if r["CandidateName"] == "YES"
             ]
         )
         constitution_no = sum(
             [
-                int(
-                    r["VoteCount"]
-                    for r in constitution_rows
-                    if r["CandidateName"] == "NO"
-                )
+                int(r["VoteCount"])
+                for r in constitution_rows
+                if r["CandidateName"] == "NO"
             ]
         )
 
         senate_rows = [
             r
             for r in precinct_rows
-            if r["ContestName"] == "UNITED STATES SENATOR"
+            if r["ContestName"] == SENATOR
             and r["CandidateName"] not in IGNORE_CANDIDATES
         ]
-        senate_total = sum([int(r["VoteCount"] for r in senate_rows)])
+        senate_total = sum([int(r["VoteCount"]) for r in senate_rows])
         senate_dem = sum(
             [
                 int(r["VoteCount"])
@@ -158,3 +158,6 @@ if __name__ == "__main__":
             "us-senate-votes",
         ],
     )
+
+    writer.writeheader()
+    writer.writerows(results)
