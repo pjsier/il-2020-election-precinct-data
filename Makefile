@@ -19,7 +19,7 @@ output/il.geojson: $(PRECINCT_FILES)
 	-o $@
 
 output/%.geojson: data/precincts/%.geojson data/results/%.csv
-	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -o $@
+	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -each 'authority = "$*"' -o $@
 
 # MELROSE PCT 2 is "MELROSE 2" in current results
 data/precincts/adams.geojson:
@@ -153,7 +153,6 @@ data/precincts/dekalb.geojson: input/precincts/Precinct_Area.shp
 	-each 'precinct = township.toUpperCase() + " " + Precinct_N.split(" ").slice(-1)[0]' \
 	-o $@
 
-# TODO: Figure out where to put source, only derived?
 input/precincts/Precinct_Area.shp: input/foia/Precinct_Area.zip
 	unzip -u $< -d $(dir $@)
 
