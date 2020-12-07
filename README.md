@@ -1,11 +1,19 @@
 # Illinois 2020 General Election Precinct Data
 
-## Prerequisites
+Election results by precinct and precinct boundaries for the Illinois 2020 general election. Precinct boundary GeoJSON files without results are in [`data/precincts/`](./data/precincts/), CSV files of results are in [`data/results/`](./data/results/), and GeoJSON files of boundaries joined to results are in [`output/`](./output/).
 
-Make, Python, `jq`, `mapshaper`, `xsv`
+Precinct boundaries come from election authorities when a source is available. Sources include open data portals, ArcGIS servers scraped with with [`pyesridump`](https://github.com/openaddresses/pyesridump), and other locations loaded with custom scripts. In a few cases boundaries come from FOIA requests included in this repo. Otherwise boundaries are 2016 precincts from the [Voting and Election Science Team on the Harvard Dataverse](https://doi.org/10.7910/DVN/NH5S2I/IJPOUH). Precinct boundaries are checked against [precinct maps as PDFs or images maintained by the Illinois State Board of Elections](https://www.elections.il.gov/precinctmaps/), and in some cases when 2016 precincts have been consolidated and aren't otherwise available they're modified here.
 
-## Methodology
+## Setup
 
-- Prioritize scraping from ArcGIS servers or downloading from open data portals
-- If unavailable, check the [PDF precinct maps](https://www.elections.il.gov/precinctmaps/) submitted to the [Illinois State Board of Elections](https://www.elections.il.gov/) to see if they match [2016 voting precinct boundaries](https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/NH5S2I/IJPOUH&version=46.0)
-- If matching precincts for an election authority are still unavailable, the precincts are obtained through a FOIA request
+You'll need GNU Make, Python, [`jq`](https://stedolan.github.io/jq/), [`mapshaper`](https://github.com/mbloch/mapshaper/), and [`xsv`](https://github.com/burntsushi/xsv) installed.
+
+To install Python dependencies and rebuild data locally, run:
+
+```shell
+make install
+```
+
+## Attribution
+
+Voting and Election Science Team, 2018, "il_2016.zip", 2016 Precinct-Level Election Results, https://doi.org/10.7910/DVN/NH5S2I/IJPOUH, Harvard Dataverse, V46
