@@ -2,7 +2,11 @@
 
 Election results by precinct and precinct boundaries for the Illinois 2020 general election. Precinct boundary GeoJSON files without results are in [`data/precincts/`](./data/precincts/), CSV files of results are in [`data/results/`](./data/results/), and GeoJSON files of boundaries joined to results are in [`output/`](./output/).
 
-Precinct boundaries come from election authorities when a source is available. Sources include open data portals, ArcGIS servers scraped with with [`pyesridump`](https://github.com/openaddresses/pyesridump), and other locations loaded with custom scripts. In a few cases boundaries come from FOIA requests included in this repo. Otherwise boundaries are 2016 precincts from the [Voting and Election Science Team on the Harvard Dataverse](https://doi.org/10.7910/DVN/NH5S2I/IJPOUH). Precinct boundaries are checked against [precinct maps as PDFs or images maintained by the Illinois State Board of Elections](https://www.elections.il.gov/precinctmaps/), and in some cases when 2016 precincts have been consolidated and aren't otherwise available they're modified here.
+## Sources
+
+Precinct boundaries come from election authorities when a source is available. Sources include open data portals, ArcGIS servers scraped with with [`pyesridump`](https://github.com/openaddresses/pyesridump), and other locations loaded with custom scripts. In a few cases boundaries come from FOIA requests included in this repo. Otherwise boundaries are 2016 precincts from the [Voting and Election Science Team on the Harvard Dataverse](https://doi.org/10.7910/DVN/NH5S2I/IJPOUH).
+
+Precinct boundaries are checked against [precinct maps as PDFs or images maintained by the Illinois State Board of Elections](https://www.elections.il.gov/precinctmaps/), and in some cases when 2016 precincts have been consolidated and aren't otherwise available they're modified here.
 
 ## Setup
 
