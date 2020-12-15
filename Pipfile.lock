@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c3deff93a1958e69c80349b9f8a45549a8f2d1133b14746ee6e2dd345cb4b80e"
+            "sha256": "70f4558129ad58795abe33da45cc28cf4ddd98b0baf033d151730ed5115fd918"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -18,11 +18,11 @@
     "default": {
         "arcgis2geojson": {
             "hashes": [
-                "sha256:1a65e9bddb9edbc5cb0446d691b134c5c3fcface06c99ceafe27f0dce4e61f7b",
-                "sha256:e333f6fe3360b709e46c936684d231967d47c699adb1f26c3ea1720737f727f8"
+                "sha256:07336ba30b783099dd2bfb4d521a825736b69966a580d2f92413afe0bdc4a41a",
+                "sha256:dc35be2c52184e720ef3b5df96fa9ba1624f16feb25c04a1521e5d5567a5e992"
             ],
             "index": "pypi",
-            "version": "==2.0.0"
+            "version": "==2.0.1"
         },
         "beautifulsoup4": {
             "hashes": [
@@ -41,10 +41,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:1f422849db327d534e3d0c5f02a263458c3955ec0aae4ff09b95f195c59f4edd",
-                "sha256:f05def092c44fbf25834a51509ef6e631dc19765ab8a57b4e7ab85531f0a9cf4"
+                "sha256:1a4995114262bffbc2413b159f2a1a480c969de6e6eb13ee966d470af86af59c",
+                "sha256:719a74fb9e33b9bd44cc7f3a8d94bc35e4049deebe19ba7d8e108280cfd59830"
             ],
-            "version": "==2020.11.8"
+            "version": "==2020.12.5"
         },
         "chardet": {
             "hashes": [
@@ -68,6 +68,14 @@
             ],
             "index": "pypi",
             "version": "==1.9.3"
+        },
+        "geojson-rewind": {
+            "hashes": [
+                "sha256:212c10e8b675dd09749d837eef3d1fc958063f039836476d5266497302166ca9",
+                "sha256:8d802b07dc211df0f826c18dfcbcdc4303ad02fbc98a5216ee7330d22aba0888"
+            ],
+            "markers": "python_version >= '3.5' and python_version < '4.0'",
+            "version": "==0.2.0"
         },
         "geomet": {
             "hashes": [
@@ -162,18 +170,26 @@
         },
         "soupsieve": {
             "hashes": [
-                "sha256:1634eea42ab371d3d346309b93df7870a88610f0725d47528be902a0d95ecc55",
-                "sha256:a59dc181727e95d25f781f0eb4fd1825ff45590ec8ff49eadfd7f1a537cc0232"
+                "sha256:4bb21a6ee4707bf43b61230e80740e71bfe56e55d1f1f50924b087bb2975c851",
+                "sha256:6dc52924dc0bc710a5d16794e6b3480b2c7c08b07729505feab2b2c16661ff6e"
             ],
             "markers": "python_version >= '3.0'",
-            "version": "==2.0.1"
+            "version": "==2.1"
+        },
+        "thinkgisdump": {
+            "hashes": [
+                "sha256:348151fcc98d3bc66129548bcc44844035405823806857bac1c342f3808a8c5d",
+                "sha256:7ea46e7d25820cd57e8daeef09e2d341a6763d3a2d1190a7ad503f02752290a6"
+            ],
+            "index": "pypi",
+            "version": "==0.2.0"
         },
         "urllib3": {
             "hashes": [
                 "sha256:19188f96923873c92ccb987120ec4acaa12f0461fa9ce5d3d0772bc965a39e08",
                 "sha256:d8ff90d979214d7b4f8ce956e80f4028fc6860e4431f731ea4a8c08f23f99473"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
             "version": "==1.26.2"
         }
     },

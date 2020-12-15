@@ -21,7 +21,6 @@ output/il.geojson: $(PRECINCT_FILES)
 output/%.geojson: data/precincts/%.geojson data/results/%.csv
 	mapshaper -i $< -join $(filter-out $<,$^) keys=precinct,precinct field-types=precinct:str -each 'authority = "$*"' -o $@
 
-# MELROSE PCT 2 is "MELROSE 2" in current results
 data/precincts/adams.geojson:
 	pipenv run esri2geojson http://www.adamscountyarcserver.com/adamscountyarcserver/rest/services/AdamsCoBaseMapFG_2018/MapServer/43 - | \
 	mapshaper -i - \
@@ -344,7 +343,7 @@ data/precincts/lasalle.geojson:
 	-each 'precinct = precinct.match(/\d/gi) ? precinct : precinct + " 1"' \
 	-o $@
 
-# TODO: Figure out how Bridgeport precincts mered
+# TODO: Figure out how Bridgeport precincts merged
 # Denison 10 and 11 merged as well as Bridgeport 4, 5, 6, and 7 based on map PDFs
 # https://www.elections.il.gov/precinctmaps/Lawrence/Denison.pdf
 # https://www.elections.il.gov/precinctmaps/Lawrence/Bridgeport.pdf
@@ -547,9 +546,9 @@ data/precincts/randolph.geojson: input/precincts/il_2016.geojson
 	-o $@
 
 data/precincts/richland.geojson:
-	pipenv run python scripts/scrape_richland.py | \
+	pipenv run thinkgis2geojson 'https://richlandil.wthgis.com/tgis/index.ashx' -q --layer-id 1283 | \
 	mapshaper -i - \
-	-clean rewind \
+	-rename-fields precinct="Feature Name" \
 	-each 'precinct = precinct.replace(" Precinct", "").toUpperCase()' \
 	-each 'precinct = precinct.includes("OLNEY") ? precinct.replace(/ (?=\d$$)/g, " 0") : precinct' \
 	-o $@
@@ -806,7 +805,6 @@ data/results/marion.csv: input/results/il-2020.csv
 	-each 'precinct = precinct.toUpperCase()' \
 	-o $@
 
-# TODO: Can't confirm this works without final results
 data/results/%.csv: input/results/il-2020.csv
 	xsv search -s authority '^$*$$' $< > $@
 
@@ -814,7 +812,6 @@ input/results/il-2020.csv: input/results/us-president.csv input/results/us-senat
 	xsv cat rows $^ | \
 	pipenv run python scripts/process_boe_results.py > $@
 
-# TODO: Placeholders, might end up being same URL
 input/results/us-president.csv:
 	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/51/51-120-PRESIDENT%20AND%20VICE%20PRESIDENT-2016GE.csv'
 
