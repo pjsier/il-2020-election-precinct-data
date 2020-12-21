@@ -5,6 +5,7 @@ input/precincts/*
 data/precincts/*
 !data/precincts/.keep
 output/*
+!output/il.geojson
 !output/.keep
 input/results/*
 !input/results/.keep
