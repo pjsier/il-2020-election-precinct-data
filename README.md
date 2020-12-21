@@ -1,6 +1,6 @@
 # Illinois 2020 General Election Precinct Data
 
-Election results by precinct and precinct boundaries for the Illinois 2020 general election. Results include races for US President, US Senate, and the proposed constitutional amendment as well as turnout data. Precinct boundary GeoJSON files without results are in [`data/precincts/`](./data/precincts/), CSV files of results are in [`data/results/`](./data/results/), and GeoJSON files of boundaries joined to results are in [`output/`](./output/).
+Election results by precinct and precinct boundaries for the Illinois 2020 general election. Results include races for US President, US Senate, and the proposed constitutional amendment. Precinct boundary GeoJSON files without results are in [`data/precincts/`](./data/precincts/), CSV files of results are in [`data/results/`](./data/results/), and GeoJSON files of boundaries joined to results are in [`output/`](./output/).
 
 ## Methodology
 
@@ -10,9 +10,8 @@ Precinct boundaries are checked against [precinct maps as PDFs or images maintai
 
 ### Known Data Issues
 
-- Clay County precinct Harter 2 is not listed in precinct results, locations
-- Lawrence County Bridgeport precincts are merged, but not clear how
-- Randolph County precinct Red Bud 5 is in results but not boundaries
+- Registration and total ballot counts aren't currently accurate
+- Jackson county precincts Carbondale 21, 22, 24, and 25 are manually edited based off of approved changes
 - Rockford boundaries are missing Ward 14 Precinct 4
 
 ## Attribution

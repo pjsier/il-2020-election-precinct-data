@@ -26,12 +26,10 @@ data/precincts/adams.geojson:
 	mapshaper -i - \
 	-rename-fields precinct=Precinct \
 	-each 'precinct = precinct.replace("Q ", "QUINCY ")' \
-	-each 'precinct = precinct.replace("CAMP POINT ", "CAMP POINT PCT ")' \
-	-each 'precinct = precinct.replace("EL ", "ELLINGTON PCT ")' \
-	-each 'precinct = precinct.replace("MEL ", "MELROSE PCT ")' \
-	-each 'precinct = precinct.replace("MENDON ", "MENDON PCT ")' \
-	-each 'precinct = precinct.replace("PAYSON ", "PAYSON PCT ")' \
+	-each 'precinct = precinct.replace("MEL ", "MELROSE ")' \
+	-each 'precinct = precinct.replace("EL ", "ELLINGTON ")' \
 	-each 'precinct = precinct.replace("RIV ", "RIVERSIDE ")' \
+	-each 'precinct = precinct.match(/\d/g) ? precinct : precinct + " 1"' \
 	-dissolve2 precinct \
 	-o $@
 
@@ -52,6 +50,9 @@ data/precincts/boone.geojson:
 	mapshaper -i - \
 	-rename-fields precinct_num=Precinct \
 	-each 'precinct = TWP_PRECIN.toUpperCase()' \
+	-each 'precinct = precinct.replace("LEROY 1", "LE ROY")' \
+	-each 'precinct = precinct.replace("MANCHESTER 1", "MANCHESTER")' \
+	-each 'precinct = precinct.replace("SPRING 1", "SPRING")' \
 	-dissolve2 precinct \
 	-o $@
 
@@ -107,7 +108,7 @@ data/precincts/clark.geojson: input/precincts/il_2016.geojson
 
 # Larkinsburg, Pixley, Clay City all merged based on Clerk's site
 # http://claycountyillinois.org/clerkrecorder/
-# TODO: What happened to HARTER 2?
+# Harter 1 and 2 merged http://claycountyillinois.org/june-11-2019/
 data/precincts/clay.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "025"' \
@@ -115,6 +116,7 @@ data/precincts/clay.geojson: input/precincts/il_2016.geojson
 	-each 'precinct = precinct.includes("LARKINSBURG") ? "LARKINSBURG" : precinct' \
 	-each 'precinct = precinct.includes("PIXLEY") ? "PIXLEY" : precinct' \
 	-each 'precinct = precinct.includes("CLAY CITY") ? "CLAY CITY" : precinct' \
+	-each 'precinct = precinct === "HARTER 2" ? "HARTER 1" : precinct' \
 	-dissolve2 precinct \
 	-o $@
 
@@ -205,7 +207,7 @@ data/precincts/franklin.geojson: input/precincts/il_2016.geojson
 data/precincts/fulton.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "057"' \
-	-each 'precinct = precinct.includes("CANTON") ? precinct.replace(/ (?=\d$$)/g, " 0") : precinct.replace("LEE", "LEE TWP")' \
+	-each 'precinct = precinct.includes("CANTON") ? precinct.replace(/ (?=\d$$)/g, "  ") : precinct.replace("LEE", "LEE TWP")' \
 	-o $@
 
 data/precincts/gallatin.geojson: input/precincts/il_2016.geojson
@@ -256,7 +258,6 @@ data/precincts/henderson.geojson: input/precincts/il_2016.geojson
 data/precincts/henry.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "073"' \
-	-each 'precinct = precinct.replace("COLONA 2", "COLONA 2 B")' \
 	-o $@
 
 data/precincts/iroquois.geojson:
@@ -265,10 +266,16 @@ data/precincts/iroquois.geojson:
 	-each 'precinct = Name.toUpperCase().replace("IV", "4").replace("III", "3").replace("II", "2").replace(" I", " 1")' \
 	-o $@
 
-data/precincts/jackson.geojson: input/precincts/il_2016.geojson
+# Manually updated based on https://www.jacksoncounty-il.gov/Home/Components/MeetingsManager/MeetingItem/7093/
+# https://www.jacksoncounty-il.gov/Home/Components/MeetingsManager/MeetingMinutes/ShowPrimaryDocument/?minutesID=3696&isPub=True&includeTrash=False
+data/precincts/jackson.geojson: input/precincts/jackson.geojson input/other/jackson-manual.geojson
+	mapshaper -i $^ combine-files -merge-layers -o $@
+
+input/precincts/jackson.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "077"' \
-	-each 'precinct = precinct.toUpperCase()' \
+	-each 'precinct = precinct.toUpperCase().replace(" - ", "-")' \
+	-filter '!["CARBONDALE 21", "CARBONDALE 22", "CARBONDALE 24", "CARBONDALE 25"].includes(precinct)' \
 	-o $@
 
 data/precincts/jasper.geojson: input/precincts/il_2016.geojson
@@ -304,7 +311,7 @@ data/precincts/kane.geojson:
 data/precincts/kankakee.geojson:
 	pipenv run esri2geojson https://k3gis.com/arcgis/rest/services/BASE/Elected_Officials/MapServer/0 - | \
 	mapshaper -i - \
-	-each 'precinct = name.toUpperCase().replace(/ (?=\d)/gi, " #").replace("NORTON #1", "NORTON")' \
+	-each 'precinct = name.toUpperCase().replace("NORTON 1", "NORTON")' \
 	-o $@
 
 data/precincts/kendall.geojson: input/precincts/Kendall_County_Voting_Precinct.shp
@@ -343,12 +350,16 @@ data/precincts/lasalle.geojson:
 	-each 'precinct = precinct.match(/\d/gi) ? precinct : precinct + " 1"' \
 	-o $@
 
-# TODO: Figure out how Bridgeport precincts merged
-# Denison 10 and 11 merged as well as Bridgeport 4, 5, 6, and 7 based on map PDFs
 # https://www.elections.il.gov/precinctmaps/Lawrence/Denison.pdf
 # https://www.elections.il.gov/precinctmaps/Lawrence/Bridgeport.pdf
 data/precincts/lawrence.geojson: input/precincts/il_2016.geojson
-	mapshaper -i $< -filter 'COUNTYFP === "101"' -o $@
+	mapshaper -i $< \
+	-filter 'COUNTYFP === "101"' \
+	-each 'precinct = precinct === "DENISON 11" ? "DENISON 10" : precinct' \
+	-each 'precinct = precinct === "BRIDGEPORT 5" ? "BRIDGEPORT 4" : precinct' \
+	-each 'precinct = precinct === "BRIDGEPORT 7" ? "BRIDGEPORT 6" : precinct' \
+	-dissolve2 precinct \
+	-o $@
 
 data/precincts/lee.geojson:
 	pipenv run esri2geojson https://gis.leecountyil.com/server/rest/services/Election/Election_Precincts/MapServer/0 - | \
@@ -421,8 +432,7 @@ data/precincts/mcdonough.geojson:
 	pipenv run python scripts/scrape_mcdonough.py | \
 	mapshaper -i - \
 	-proj init='+proj=tmerc +lat_0=36.66666666666666 +lon_0=-90.16666666666667 +k=0.999941 +x_0=700000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs' crs=wgs84 \
-	-each 'precinct = Name.toUpperCase().replace("MACOMB", "MACOMB TWP").replace("MC ", "MACOMB CITY ")' \
-	-each 'precinct = precinct.replace(/(?<=MACOMB CITY) (?=\d$$)/g, " 0")' \
+	-each 'precinct = Name.toUpperCase().replace("MACOMB", "MACOMB TWP").replace("MC ", "MACOMB CITY ").replace(/Y 1$$/gi, "Y  1")' \
 	-o $@
 
 data/precincts/mchenry.geojson:
@@ -506,7 +516,6 @@ data/precincts/perry.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "145"' \
 	-each 'precinct = precinct.replace("DU QUOIN", "DUQUOIN")' \
-	-each 'precinct = precinct.includes("DUQUOIN") ? precinct.replace(/ (?=\d$$)/g, " 0") : precinct' \
 	-o $@
 
 data/precincts/piatt.geojson:
@@ -538,7 +547,6 @@ data/precincts/putnam.geojson: input/precincts/il_2016.geojson
 	-each 'precinct = ["HENNEPIN", "SENACHWINE"].includes(precinct) ? precinct + " 1" : precinct' \
 	-o $@
 
-# TODO: Find Randolph Red Bud 5
 data/precincts/randolph.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "157"' \
@@ -549,8 +557,7 @@ data/precincts/richland.geojson:
 	pipenv run thinkgis2geojson 'https://richlandil.wthgis.com/tgis/index.ashx' -q --layer-id 1283 | \
 	mapshaper -i - \
 	-rename-fields precinct="Feature Name" \
-	-each 'precinct = precinct.replace(" Precinct", "").toUpperCase()' \
-	-each 'precinct = precinct.includes("OLNEY") ? precinct.replace(/ (?=\d$$)/g, " 0") : precinct' \
+	-each 'precinct = precinct.replace(" Precinct", "").toUpperCase().replace(/Y 1$$/gi, "Y  1")' \
 	-o $@
 
 data/precincts/rock-island.geojson: input/precincts/il_2016.geojson
@@ -562,8 +569,9 @@ data/precincts/rock-island.geojson: input/precincts/il_2016.geojson
 data/precincts/saline.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "165"' \
-	-each 'precinct = precinct.replace("ELDORADO", "EAST ELDORADO")' \
+	-each 'precinct = precinct.replace("ELDORADO ", "EAST ELDORADO #")' \
 	-each 'precinct = ["COTTAGE 1", "GALATIA 1", "INDEPENDENCE 1", "LONG BRANCH 1", "MOUNTAIN 1", "RALEIGH 1", "RECTOR 1", "STONEFORT 1", "TATE 1"].includes(precinct) ? precinct.replace(" 1", "") : precinct' \
+	-each 'precinct = precinct.replace(" MILLS ", " MILLS #").replace("HARRISBURG ", "HARRISBURG # ").replace(" # 10", " #10")' \
 	-o $@
 
 data/precincts/sangamon.geojson:
@@ -579,7 +587,7 @@ data/precincts/schuyler.geojson: input/precincts/il_2016.geojson
 data/precincts/scott.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "171"' \
-	-each 'precinct = precinct.replace("WINCHESTER I", "WINCHESTER   I").replace("WINCHESTER II", "WINCHESTER  II")' \
+	-each 'precinct = precinct.replace("WINCHESTER II", "WINCHESTER  II").replace("WINCHESTER I", "WINCHESTER   I").replace("WINCHESTER  III", "WINCHESTER III")' \
 	-o $@
 
 data/precincts/shelby.geojson: input/precincts/il_2016.geojson
@@ -617,7 +625,7 @@ data/precincts/stephenson.geojson: input/precincts/County_Precincts_2010_Census.
 	-o $@
 
 # Pulled from site manually, but included because uses strict firewall for automated downloads
-input/precincts/County_Precincts_2010_Census.shp: input/foia/County_Precincts_2010_Census.zip
+input/precincts/County_Precincts_2010_Census.shp: input/other/County_Precincts_2010_Census.zip
 	unzip -u $< -d $(dir $@)
 
 data/precincts/tazewell.geojson:
@@ -651,13 +659,14 @@ data/precincts/warren.geojson: input/precincts/il_2016.geojson
 	-each 'precinct = precinct.replace("GERLAW 1", "GERLAW 2")' \
 	-o $@
 
-# Nashville 2 consolidated in 1, Irvington consolidated
+# Nashville 2 consolidated in 1, Irvington consolidated, Hoyleton consolidated
 # https://www.elections.il.gov/precinctmaps/Washington/Washington%20County%20Precinct%20Map.pdf
 data/precincts/washington.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "189"' \
 	-each 'precinct = precinct.replace("DUBOIS", "DuBOIS").replace("NASHVILLE 2", "NASHVILLE 1").replace("IRVINGTON 2", "IRVINGTON 1")' \
 	-each 'precinct = ["ASHLEY 1", "IRVINGTON 1", "OAKDALE 1", "VENEDY 1"].includes(precinct) ? precinct.replace(" 1", "") : precinct' \
+	-each 'precinct = precinct.includes("HOYLETON") ? "HOYLETON" : precinct' \
 	-dissolve2 precinct \
 	-o $@
 
@@ -670,7 +679,7 @@ data/precincts/wayne.geojson: input/precincts/il_2016.geojson
 data/precincts/white.geojson: input/precincts/il_2016.geojson
 	mapshaper -i $< \
 	-filter 'COUNTYFP === "193"' \
-	-each 'precinct = precinct.replace("HAROLDS", "HERALDS")' \
+	-each 'precinct = precinct.replace("HAROLDS", "HERALDS").replace("GREY", "GRAY")' \
 	-o $@
 
 data/precincts/whiteside.geojson:
@@ -805,18 +814,24 @@ data/results/marion.csv: input/results/il-2020.csv
 	-each 'precinct = precinct.toUpperCase()' \
 	-o $@
 
+data/results/mchenry.csv: input/results/il-2020.csv
+	xsv search -s authority '^mchenry$$' $< | \
+	mapshaper -i - format=csv \
+	-each 'precinct = precinct.replace(/[A-Z]{3}/g, "").replace(/\s+/g, " ").toUpperCase()' \
+	-o $@
+
 data/results/%.csv: input/results/il-2020.csv
 	xsv search -s authority '^$*$$' $< > $@
 
-input/results/il-2020.csv: input/results/us-president.csv input/results/us-senate.csv
+input/results/il-2020.csv: input/results/us-president.csv input/results/us-senate.csv input/results/il-constitution.csv
 	xsv cat rows $^ | \
 	pipenv run python scripts/process_boe_results.py > $@
 
 input/results/us-president.csv:
-	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/51/51-120-PRESIDENT%20AND%20VICE%20PRESIDENT-2016GE.csv'
+	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-120-PRESIDENT%20AND%20VICE%20PRESIDENT-2020GE.csv'
 
 input/results/us-senate.csv:
-	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/51/51-160-UNITED%20STATES%20SENATOR-2016GE.csv'
+	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-160-UNITED%20STATES%20SENATOR-2020GE.csv'
 
 input/results/il-constitution.csv:
-	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-100-1A-1-2016GE.csv'
+	wget -O $@ 'https://www.elections.il.gov/Downloads/ElectionOperations/ElectionResults/ByOffice/58/58-100-1A-1-2020GE.csv'
