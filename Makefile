@@ -702,16 +702,18 @@ data/precincts/williamson.geojson: input/precincts/il_2016.geojson
 	-each 'precinct = precinct.replace(" TWP", "").replace("CORINTH", "CORINTH 1").replace("GRASSY", "GRASSY 1").replace("EM09 EAST MARION", "EAST MARION 9").replace("EM10 EAST MARION", "EAST MARION 10")' \
 	-o $@
 
-# Cherry Valley 12, Cherry Valley 9, Harlem 18, Harlem 4
-# Cherry Valley 12 merged into 1
-# Cherry Valley 9 merged into 4
-# Harlem 18 merged into 16
-# Harlem 4 merged into 19
-data/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
+data/precincts/winnebago.geojson: input/precincts/winnebago.geojson input/other/winnebago-manual.geojson
+	mapshaper -i $^ combine-files -merge-layers -o $@
+
+# Manual edits to Harlem and Cherry Valley precincts based on
+# https://winnebagocountyclerk.com/images/Harlem_Township.pdf
+# https://winnebagocountyclerk.com/images/Cherry_Valley_Township.pdf
+input/precincts/winnebago.geojson: input/precincts/Shapefiles_2020.shp
 	mapshaper -i $< \
 	-proj crs=wgs84 \
 	-each 'precinct = PCTNAME.toUpperCase().replace(/\s+/, " ").replace("ROCKTON1", "ROCKTON 1").replace("ROCKFORD ROCKFORD", "ROCKFORD")' \
 	-dissolve2 precinct \
+	-filter '!["CHERRY VALLEY 1", "CHERRY VALLEY 4", "HARLEM 16", "HARLEM 19"].includes(precinct)' \
 	-o $@
 
 input/precincts/Shapefiles_2020.shp: input/foia/Shapefiles_2020.zip
@@ -770,11 +772,11 @@ input/precincts/Galesburg_City_Council_Wards.shp: input/precincts/city-of-galesb
 input/precincts/city-of-galesburg.zip:
 	wget -O $@ https://opendata.arcgis.com/datasets/5c909cb0bf8b41d4926e0464645bc2e2_0.zip
 
-# TODO: Missing 1404
 data/precincts/city-of-rockford.geojson:
 	pipenv run python scripts/scrape_clarity.py https://results.enr.clarityelections.com/WRC/Rockford/107126/270015/json/3a6d9b2e-0e2b-467c-9450-d30f9bd379ee.json "city-of-rockford" | \
 	mapshaper -i - \
 	-rename-fields precinct=Name \
+	-each 'precinct = index === 38 ? "1404" : precinct' \
 	-dissolve2 precinct \
 	-each 'precinct = "WARD " + (+precinct.slice(0, 2)) + " PRECINCT " + (+precinct.slice(2))' \
 	-o $@

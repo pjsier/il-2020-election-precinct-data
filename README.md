@@ -12,8 +12,7 @@ Precinct boundaries are checked against [precinct maps as PDFs or images maintai
 
 - Registration and total ballot counts aren't currently accurate
 - Jackson county precincts Carbondale 21, 22, 24, and 25 are manually edited based off of approved changes
-- Rockford boundaries are missing Ward 14 Precinct 4
-- Winnebago county precincts Cherry Valley 9 and 12 as well as Harlem 4 and 18 are missing boundaries
+- Winnebago county precincts Cherry Valley 1, 4, 9 and 12 as well as Harlem 4, 16 18 and 19 are manually edited based off of maps online
 
 ## Attribution
 
